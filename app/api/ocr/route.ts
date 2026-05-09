@@ -1,0 +1,93 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { parseFuelReceipt } from '@/lib/ocr';
+import { rateLimit } from '@/lib/rate-limit';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const FREE_QUOTA = 5; // OCR scans per month for free tier
+const RATE_LIMIT_MAX = 30; // per user per minute (defence in depth)
+const RATE_LIMIT_WINDOW = 60_000;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+export async function POST(req: Request) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
+    // Rate limit per user
+    const rl = rateLimit(`ocr:${user.id}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes, réessayez dans quelques secondes' },
+        { status: 429 },
+      );
+    }
+
+    // Premium gate: free tier has FREE_QUOTA / month
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan_tier, ocr_credits_used')
+      .eq('id', user.id)
+      .single();
+    if (!profile) {
+      return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 });
+    }
+    if (
+      profile.plan_tier === 'free' &&
+      (profile.ocr_credits_used ?? 0) >= FREE_QUOTA
+    ) {
+      return NextResponse.json(
+        {
+          error: `Quota gratuit dépassé (${FREE_QUOTA}/mois). Passez Premium pour un OCR illimité.`,
+        },
+        { status: 402 },
+      );
+    }
+
+    // Parse multipart
+    const formData = await req.formData();
+    const file = formData.get('file');
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: 'Fichier manquant' },
+        { status: 400 },
+      );
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: `Type non autorisé (${file.type})` },
+        { status: 400 },
+      );
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `Fichier trop lourd (max 5 Mo)` },
+        { status: 400 },
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const result = await parseFuelReceipt(buffer);
+
+    // Increment OCR usage for free tier
+    if (profile.plan_tier === 'free') {
+      await supabase
+        .from('profiles')
+        .update({ ocr_credits_used: (profile.ocr_credits_used ?? 0) + 1 })
+        .eq('id', user.id);
+    }
+
+    return NextResponse.json(result);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Erreur OCR';
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
