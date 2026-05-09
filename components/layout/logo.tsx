@@ -3,9 +3,12 @@ import { cn } from '@/lib/utils';
 export function Logo({
   className,
   showWordmark = true,
+  wordmarkResponsive = false,
 }: {
   className?: string;
   showWordmark?: boolean;
+  /** Hide the wordmark below sm breakpoint while keeping the glyph visible */
+  wordmarkResponsive?: boolean;
 }) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
@@ -42,7 +45,12 @@ export function Logo({
         </svg>
       </div>
       {showWordmark && (
-        <span className="font-display text-lg font-bold tracking-tight">
+        <span
+          className={cn(
+            'font-display text-lg font-bold tracking-tight',
+            wordmarkResponsive && 'hidden sm:inline',
+          )}
+        >
           velocewealth
         </span>
       )}

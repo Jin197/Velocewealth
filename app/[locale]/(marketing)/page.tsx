@@ -44,16 +44,18 @@ function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-veloce/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-veloce/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-eco/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="container relative pt-20 pb-32 grid lg:grid-cols-2 gap-12 items-center">
-        <div className="space-y-6">
+      <div className="container relative pt-12 pb-16 sm:pt-20 sm:pb-32 grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+        <div className="space-y-5 sm:space-y-6">
           <Badge variant="premium" className="text-xs">
             <Sparkles className="h-3 w-3" /> {t('badge')}
           </Badge>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
+          <h1 className="font-display text-[2.25rem] sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] [text-wrap:balance]">
             {t('titleLead')}{' '}
             <span className="text-gradient-veloce">{t('titleHighlight')}</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl">{t('subtitle')}</p>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-xl">
+            {t('subtitle')}
+          </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button size="xl" asChild>
               <Link href="/signup">
@@ -65,7 +67,7 @@ function Hero() {
               <Link href="/dashboard">{t('ctaSecondary')}</Link>
             </Button>
           </div>
-          <div className="flex items-center gap-6 pt-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-2 text-xs text-muted-foreground">
             <div>{t('rating')}</div>
             <div>{t('users')}</div>
             <div>{t('trial')}</div>
@@ -133,7 +135,7 @@ function HowItWorks() {
     { icon: TrendingUp, title: t('step3Title'), desc: t('step3Description') },
   ];
   return (
-    <section className="container py-20">
+    <section className="container py-14 sm:py-20">
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
           {t('title')}
@@ -172,7 +174,7 @@ function Features() {
     { icon: Sparkles, title: t('predictTitle'), description: t('predictDescription') },
   ];
   return (
-    <section id="features" className="container py-20">
+    <section id="features" className="container py-14 sm:py-20">
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
           {t('title')}
@@ -205,7 +207,7 @@ function Testimonials() {
     { quote: t('t3Quote'), author: t('t3Author'), role: t('t3Role') },
   ];
   return (
-    <section className="container py-20">
+    <section className="container py-14 sm:py-20">
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
           {t('title')}
@@ -231,8 +233,8 @@ function Testimonials() {
 function PricingTeaser() {
   const t = useTranslations('pricing');
   return (
-    <section className="container py-20">
-      <Card variant="premium" className="p-10 sm:p-12 text-center grid sm:grid-cols-3 gap-6 items-center">
+    <section className="container py-14 sm:py-20">
+      <Card variant="premium" className="p-6 sm:p-12 text-center grid sm:grid-cols-3 gap-5 sm:gap-6 items-center">
         <div className="sm:text-start">
           <Badge variant="premium" className="mb-3">
             <Sparkles className="h-3 w-3" /> {t('mostChosen')}
@@ -243,12 +245,12 @@ function PricingTeaser() {
           </p>
         </div>
         <div className="text-center">
-          <div className="font-mono text-5xl font-bold tabular-nums">4,99</div>
+          <div className="font-mono text-4xl sm:text-5xl font-bold tabular-nums">4,99</div>
           <div className="text-sm text-muted-foreground">{t('premiumPerMonth')}</div>
           <div className="text-xs text-eco mt-1">{t('premiumPerYear')}</div>
         </div>
         <div className="sm:text-end">
-          <Button size="xl" asChild>
+          <Button size="xl" asChild className="w-full sm:w-auto">
             <Link href="/pricing">
               {t('premiumCtaMonthly')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -271,7 +273,7 @@ function FAQ() {
     { q: t('q6'), a: t('a6') },
   ];
   return (
-    <section className="container py-20">
+    <section className="container py-14 sm:py-20">
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
           {t('title')}
@@ -303,16 +305,18 @@ function FAQ() {
 function CTA() {
   const tCta = useTranslations('landing.cta');
   return (
-    <section className="container py-20">
-      <Card variant="premium" className="p-10 sm:p-16 text-center relative overflow-hidden">
+    <section className="container py-14 sm:py-20">
+      <Card variant="premium" className="p-6 sm:p-16 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,122,255,0.2),transparent_50%)] pointer-events-none" />
         <div className="relative">
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
+          <h2 className="font-display text-2xl sm:text-4xl font-bold tracking-tight [text-wrap:balance]">
             {tCta('title')}
           </h2>
-          <p className="text-muted-foreground mt-3 max-w-xl mx-auto">{tCta('subtitle')}</p>
+          <p className="text-sm sm:text-base text-muted-foreground mt-3 max-w-xl mx-auto">
+            {tCta('subtitle')}
+          </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center items-center">
-            <Button size="xl" asChild>
+            <Button size="xl" asChild className="w-full sm:w-auto">
               <Link href="/signup">
                 {tCta('button')}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -320,7 +324,7 @@ function CTA() {
             </Button>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-eco" strokeWidth={2} />
-              <span>30 days · no commitment · ad-free</span>
+              <span>30j · sans engagement · sans publicité</span>
             </div>
           </div>
         </div>

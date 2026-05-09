@@ -30,9 +30,9 @@ function Header() {
   const tNav = useTranslations('nav');
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <Link href="/">
-          <Logo />
+      <div className="container flex h-16 items-center justify-between gap-2 sm:gap-4">
+        <Link href="/" className="shrink-0">
+          <Logo wordmarkResponsive />
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm">
           <Link href="/#features" className="text-muted-foreground hover:text-foreground">
@@ -45,9 +45,9 @@ function Header() {
             {tNav('partners')}
           </Link>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <LocaleSwitcher />
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
             <Link href="/login">{tNav('login')}</Link>
           </Button>
           <Button size="sm" asChild>
@@ -63,9 +63,9 @@ function Footer() {
   const t = useTranslations('footer');
   const tNav = useTranslations('nav');
   return (
-    <footer className="border-t border-border mt-24">
-      <div className="container py-10 grid gap-8 md:grid-cols-4 text-sm">
-        <div className="space-y-3">
+    <footer className="border-t border-border mt-16 sm:mt-24">
+      <div className="container py-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4 text-sm">
+        <div className="space-y-3 sm:col-span-2 md:col-span-1">
           <Logo />
           <p className="text-muted-foreground text-xs leading-relaxed">{t('tagline')}</p>
         </div>
@@ -92,7 +92,7 @@ function Footer() {
         </div>
       </div>
       <div className="border-t border-border">
-        <div className="container py-4 text-xs text-muted-foreground flex justify-between">
+        <div className="container py-4 text-xs text-muted-foreground flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-between">
           <span>{t('copyright')}</span>
           <span>{t('rights')}</span>
         </div>
