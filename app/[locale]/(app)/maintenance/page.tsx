@@ -1,5 +1,5 @@
 import { Link } from '@/lib/i18n/routing';
-import { Plus, Wrench, FileText } from 'lucide-react';
+import { Plus, Wrench, FileText, Brain } from 'lucide-react';
 import { PageHeader, Section } from '@/components/domain/page-header';
 import { AlertCard } from '@/components/domain/alert-card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ export default async function MaintenancePage() {
   ]);
 
   if (maintenance.length === 0 && alerts.length === 0) {
-    return <Empty />;
+    return <Empty firstVehicleId={vehicles[0]?.id} />;
   }
 
   return (
@@ -46,7 +46,14 @@ export default async function MaintenancePage() {
         title="Entretien"
         description="Historique, alertes et carnet certifié de votre flotte"
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {vehicles[0] && (
+              <Button variant="outline" asChild>
+                <Link href={`/maintenance/plan/${vehicles[0].id}`}>
+                  <Brain className="h-4 w-4" /> Plan IA
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" asChild>
               <Link href="/maintenance/log">
                 <FileText className="h-4 w-4" /> Carnet certifié
@@ -60,6 +67,40 @@ export default async function MaintenancePage() {
           </div>
         }
       />
+
+      {vehicles.length > 1 && (
+        <Section
+          title="Plan de maintenance par véhicule"
+          description="Générique ou jumeau numérique selon l'historique"
+        >
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vehicles.map((v) => {
+              const count = maintenance.filter((m) => m.vehicleId === v.id).length;
+              return (
+                <Link
+                  key={v.id}
+                  href={`/maintenance/plan/${v.id}`}
+                  className="rounded-card border border-border bg-card p-4 hover:bg-muted/40 transition-colors flex items-center gap-3"
+                >
+                  <div className="rounded-btn bg-veloce/10 text-veloce p-2">
+                    <Brain className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {v.make} {v.model}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {count > 0
+                        ? `Jumeau numérique · ${count} historique${count > 1 ? 's' : ''}`
+                        : 'Plan générique'}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </Section>
+      )}
 
       {alerts.length > 0 && (
         <Section
@@ -124,7 +165,7 @@ export default async function MaintenancePage() {
   );
 }
 
-function Empty() {
+function Empty({ firstVehicleId }: { firstVehicleId?: string }) {
   return (
     <div className="container py-12">
       <Card className="p-10 max-w-xl mx-auto text-center">
@@ -135,13 +176,24 @@ function Empty() {
           Aucun entretien enregistré
         </h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Chaque intervention sera signée et ajoutée au carnet certifié.
+          Générez un plan d'entretien basé sur les recommandations constructeur,
+          ou saisissez vos premières interventions pour activer le jumeau
+          numérique.
         </p>
-        <Button asChild className="mt-5">
-          <Link href="/maintenance/new">
-            <Plus className="h-4 w-4" /> Ajouter une intervention
-          </Link>
-        </Button>
+        <div className="mt-5 flex gap-2 justify-center flex-wrap">
+          {firstVehicleId && (
+            <Button variant="outline" asChild>
+              <Link href={`/maintenance/plan/${firstVehicleId}`}>
+                <Brain className="h-4 w-4" /> Générer un plan
+              </Link>
+            </Button>
+          )}
+          <Button asChild>
+            <Link href="/maintenance/new">
+              <Plus className="h-4 w-4" /> Ajouter une intervention
+            </Link>
+          </Button>
+        </div>
       </Card>
     </div>
   );

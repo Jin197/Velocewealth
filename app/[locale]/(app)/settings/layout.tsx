@@ -20,18 +20,18 @@ export default function SettingsLayout({
 }) {
   const pathname = usePathname();
   return (
-    <div className="container py-6 lg:py-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl mx-auto w-full">
       <h1 className="font-display text-2xl lg:text-3xl font-bold tracking-tight mb-6">
         Paramètres
       </h1>
-      <div className="grid lg:grid-cols-[220px_1fr] gap-6">
-        <nav className="lg:sticky lg:top-20 lg:self-start">
-          <ul className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar -mx-1 px-1 lg:mx-0 lg:px-0">
+      <div className="flex flex-col lg:grid lg:grid-cols-[220px_1fr] gap-6">
+        <nav className="lg:sticky lg:top-20 lg:self-start overflow-hidden">
+          <ul className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar pb-2 lg:pb-0">
             {sections.map((s) => {
               const active = pathname === s.href || (pathname === '/settings' && s.href === '/settings/profile');
               const Icon = s.icon;
               return (
-                <li key={s.href}>
+                <li key={s.href} className="shrink-0">
                   <Link
                     href={s.href}
                     className={cn(
@@ -41,7 +41,7 @@ export default function SettingsLayout({
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                     )}
                   >
-                    <Icon className="h-4 w-4" strokeWidth={1.5} />
+                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                     {s.label}
                   </Link>
                 </li>
@@ -49,7 +49,7 @@ export default function SettingsLayout({
             })}
           </ul>
         </nav>
-        <div className="min-w-0">{children}</div>
+        <div className="min-w-0 overflow-hidden">{children}</div>
       </div>
     </div>
   );

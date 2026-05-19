@@ -2,13 +2,19 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
 import { profileInputSchema } from '@/lib/validators/profile';
 
 export type ActionResult = { ok?: boolean; error?: string };
 
+const NOT_CONFIGURED: ActionResult = {
+  error: 'Backend non configuré. Voir ONBOARDING.md.',
+};
+
 export async function updateProfileAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },

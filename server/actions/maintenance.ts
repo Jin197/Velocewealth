@@ -3,6 +3,7 @@
 import { createHash } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
 import { maintenanceInputSchema } from '@/lib/validators/maintenance';
 import type { ActionResult } from './profile';
 
@@ -10,9 +11,14 @@ function sha256(input: string): string {
   return createHash('sha256').update(input).digest('hex');
 }
 
+const NOT_CONFIGURED: ActionResult = {
+  error: 'Backend non configuré. Voir ONBOARDING.md.',
+};
+
 export async function addMaintenanceAction(
   formData: FormData,
 ): Promise<ActionResult & { id?: string; hash?: string }> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },
@@ -92,6 +98,7 @@ export async function addMaintenanceAction(
 }
 
 export async function dismissAlertAction(id: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },

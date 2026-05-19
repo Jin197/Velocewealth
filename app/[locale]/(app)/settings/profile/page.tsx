@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select';
 import { FormError } from '@/components/ui/form-error';
 import { useUser } from '@/components/user-context';
 import { updateProfileAction } from '@/server/actions/profile';
+import { getCurrenciesByRegion } from '@/lib/currencies';
 
 export default function ProfileSettingsPage() {
   const user = useUser();
@@ -32,19 +33,19 @@ export default function ProfileSettingsPage() {
   return (
     <form action={handleSubmit} className="space-y-6">
       <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <Avatar name={user.fullName} size="lg" />
-          <div>
-            <div className="font-display text-lg font-semibold">
-              {user.fullName}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
+            <Avatar name={user.fullName} size="lg" />
+            <div className="min-w-0">
+              <div className="font-display text-lg font-semibold truncate">
+                {user.fullName}
+              </div>
+              <div className="text-sm text-muted-foreground truncate">{user.email}</div>
             </div>
-            <div className="text-sm text-muted-foreground">{user.email}</div>
           </div>
-          <div className="ml-auto">
-            <Button type="button" variant="outline" size="sm" disabled>
-              Changer la photo
-            </Button>
-          </div>
+          <Button type="button" variant="outline" size="sm" disabled className="shrink-0 self-start sm:self-auto">
+            Changer la photo
+          </Button>
         </div>
       </Card>
 
@@ -79,7 +80,7 @@ export default function ProfileSettingsPage() {
         <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
           Localisation
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="locale">Langue</Label>
             <Select id="locale" name="locale" defaultValue={user.locale}>
@@ -109,13 +110,15 @@ export default function ProfileSettingsPage() {
           <div className="space-y-1.5">
             <Label htmlFor="currency">Devise</Label>
             <Select id="currency" name="currency" defaultValue={user.currency}>
-              <option value="EUR">€ EUR</option>
-              <option value="USD">$ USD</option>
-              <option value="CAD">$ CAD</option>
-              <option value="CHF">Fr CHF</option>
-              <option value="MAD">DH MAD</option>
-              <option value="XOF">F CFA</option>
-              <option value="XAF">F XAF</option>
+              {getCurrenciesByRegion().map((group) => (
+                <optgroup key={group.region} label={group.region}>
+                  {group.currencies.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.symbol} {c.code} — {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </Select>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
 import { routing, locales, defaultLocale } from '@/lib/i18n/routing';
+import { ChatbotWidget } from '@/components/domain/chatbot-widget';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -68,6 +69,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <StructuredData />
       {children}
+      <ChatbotWidget />
     </NextIntlClientProvider>
   );
 }

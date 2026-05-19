@@ -2,12 +2,18 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
 import { fuelEntryInputSchema } from '@/lib/validators/fuel';
 import type { ActionResult } from './profile';
+
+const NOT_CONFIGURED: ActionResult = {
+  error: 'Backend non configuré. Voir ONBOARDING.md.',
+};
 
 export async function addFuelEntryAction(
   formData: FormData,
 ): Promise<ActionResult & { id?: string }> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },
@@ -59,6 +65,7 @@ export async function addFuelEntryAction(
 }
 
 export async function deleteFuelEntryAction(id: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },

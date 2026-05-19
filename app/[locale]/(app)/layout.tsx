@@ -21,7 +21,7 @@ export default async function AppLayout({
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
           {!isSupabaseConfigured() && <BackendNotConfiguredBanner />}
-          <main className="flex-1 pb-24 lg:pb-8">{children}</main>
+          <main className="flex-1 pb-24 lg:pb-8 overflow-x-hidden">{children}</main>
         </div>
         <MobileNav />
       </div>

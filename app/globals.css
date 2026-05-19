@@ -43,8 +43,16 @@
     --ring: 211 100% 50%;
   }
 
-  * {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
     @apply border-border;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
   }
 
   html {
@@ -56,6 +64,8 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: 'cv11', 'ss01', 'ss03';
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   /* Tabular numbers for financial values */
@@ -70,6 +80,13 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+@layer utilities {
+  .container {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }
 

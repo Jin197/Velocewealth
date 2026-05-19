@@ -38,7 +38,7 @@ function Header() {
           <Link href="/#features" className="text-muted-foreground hover:text-foreground">
             {tNav('features')}
           </Link>
-          <Link href="/pricing" className="text-muted-foreground hover:text-foreground">
+          <Link href="/#pricing" className="text-muted-foreground hover:text-foreground">
             {tNav('pricing')}
           </Link>
           <Link href="/#partners" className="text-muted-foreground hover:text-foreground">
@@ -73,7 +73,7 @@ function Footer() {
           <div className="font-display font-semibold mb-3">{t('product')}</div>
           <ul className="space-y-2 text-muted-foreground">
             <li><Link href="/#features" className="hover:text-foreground">{tNav('features')}</Link></li>
-            <li><Link href="/pricing" className="hover:text-foreground">{tNav('pricing')}</Link></li>
+            <li><Link href="/#pricing" className="hover:text-foreground">{tNav('pricing')}</Link></li>
             <li><Link href="/login" className="hover:text-foreground">{tNav('login')}</Link></li>
           </ul>
         </div>

@@ -3,15 +3,21 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
 import { vehicleInputSchema } from '@/lib/validators/vehicle';
 import type { ActionResult } from './profile';
 
 const DEFAULT_IMAGE =
   'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80';
 
+const NOT_CONFIGURED: ActionResult = {
+  error: 'Backend non configuré. Voir ONBOARDING.md.',
+};
+
 export async function createVehicleAction(
   formData: FormData,
 ): Promise<ActionResult & { id?: string }> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },
@@ -61,6 +67,7 @@ export async function updateVehicleAction(
   id: string,
   formData: FormData,
 ): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },
@@ -106,6 +113,7 @@ export async function updateVehicleAction(
 }
 
 export async function deleteVehicleAction(id: string): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
   const supabase = createClient();
   const {
     data: { user },

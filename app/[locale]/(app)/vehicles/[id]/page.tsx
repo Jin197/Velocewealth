@@ -8,6 +8,8 @@ import {
   Gauge,
   Calendar,
   Hash,
+  Brain,
+  Activity
 } from 'lucide-react';
 import { PageHeader, Section } from '@/components/domain/page-header';
 import { KpiCard } from '@/components/domain/kpi-card';
@@ -65,7 +67,7 @@ export default async function VehicleDetailPage({
   const myAlerts = alerts.filter((a) => a.vehicleId === vehicle.id);
 
   return (
-    <div className="container py-6 lg:py-8 space-y-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6 max-w-7xl mx-auto w-full">
       <Button variant="ghost" size="sm" asChild className="-ml-3">
         <Link href="/vehicles">
           <ChevronLeft className="h-4 w-4" /> Tous les véhicules
@@ -82,31 +84,43 @@ export default async function VehicleDetailPage({
               className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
-          <div className="p-6 lg:p-8">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant="outline">{vehicle.year}</Badge>
-                  <Badge variant="outline">
-                    {vehicle.fuelType === 'electric'
-                      ? 'Électrique'
-                      : vehicle.fuelType === 'hybrid'
-                        ? 'Hybride'
-                        : 'Thermique'}
-                  </Badge>
-                </div>
-                <h1 className="font-display text-2xl lg:text-3xl font-bold tracking-tight mt-2">
-                  {vehicle.make} {vehicle.model}
-                </h1>
-                <div className="text-sm text-muted-foreground mt-1">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline">{vehicle.year}</Badge>
+                <Badge variant="outline">
+                  {vehicle.fuelType === 'electric'
+                    ? 'Électrique'
+                    : vehicle.fuelType === 'hybrid'
+                      ? 'Hybride'
+                      : 'Thermique'}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/maintenance/plan/${vehicle.id}`}>
+                    <Brain className="h-4 w-4" /> Plan IA
+                  </Link>
+                </Button>
+                <Button size="sm" className="bg-veloce text-white hover:bg-veloce/90" asChild>
+                  <Link href={`/maintenance/prognostics/${vehicle.id}`}>
+                    <Activity className="h-4 w-4" /> Diagnostic IA
+                  </Link>
+                </Button>
+                <DeleteVehicleButton
+                  id={vehicle.id}
+                  label={`${vehicle.make} ${vehicle.model}`}
+                />
+              </div>
+              <h1 className="font-display text-2xl lg:text-3xl font-bold tracking-tight">
+                {vehicle.make} {vehicle.model}
+              </h1>
+              {(vehicle.trim || vehicle.color) && (
+                <div className="text-sm text-muted-foreground">
                   {vehicle.trim || ''}
                   {vehicle.color ? ` · ${vehicle.color}` : ''}
                 </div>
-              </div>
-              <DeleteVehicleButton
-                id={vehicle.id}
-                label={`${vehicle.make} ${vehicle.model}`}
-              />
+              )}
             </div>
 
             <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">

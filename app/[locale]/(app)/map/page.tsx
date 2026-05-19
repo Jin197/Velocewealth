@@ -1,5 +1,6 @@
 import { Fuel, Zap, Star, MapPin, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/domain/page-header';
+import { StationsMap } from '@/components/domain/stations-map';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,38 +30,7 @@ export default async function MapPage() {
         description={`Stations et garages partenaires${country ? ` · ${country}` : ''}`}
       />
 
-      <Card className="overflow-hidden p-0 relative aspect-[2/1] sm:aspect-[3/1]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,122,255,0.18),transparent_50%),radial-gradient(circle_at_70%_60%,rgba(46,204,113,0.18),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
-        <div className="absolute top-[30%] left-[20%] flex items-center justify-center">
-          <span className="absolute h-12 w-12 rounded-full bg-amber-500/30 animate-pulse" />
-          <span className="relative h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-white">
-            <Fuel className="h-4 w-4" strokeWidth={2} />
-          </span>
-        </div>
-        <div className="absolute top-[55%] left-[55%] flex items-center justify-center">
-          <span className="absolute h-12 w-12 rounded-full bg-eco/30 animate-pulse" />
-          <span className="relative h-8 w-8 rounded-full bg-eco flex items-center justify-center text-white">
-            <Zap className="h-4 w-4" strokeWidth={2} />
-          </span>
-        </div>
-        <div className="absolute top-[40%] left-[75%] flex items-center justify-center">
-          <span className="absolute h-12 w-12 rounded-full bg-veloce/30 animate-pulse" />
-          <span className="relative h-8 w-8 rounded-full bg-veloce flex items-center justify-center text-white">
-            <Star className="h-4 w-4" strokeWidth={2} />
-          </span>
-        </div>
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-          <Badge variant="muted" className="text-xs backdrop-blur-md">
-            Mapbox interactif activé une fois NEXT_PUBLIC_MAPBOX_TOKEN renseigné
-          </Badge>
-          <div className="flex gap-2 text-xs">
-            <Badge variant="warning">Stations</Badge>
-            <Badge variant="success">Bornes</Badge>
-            <Badge variant="default">Garages partenaires</Badge>
-          </div>
-        </div>
-      </Card>
+      <StationsMap stations={stations} garages={garages} />
 
       <div className="grid lg:grid-cols-2 gap-6">
         <section className="space-y-3">

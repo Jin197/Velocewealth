@@ -3,7 +3,7 @@
 -- Tables for user data, vehicles, fuel, maintenance, public catalog
 -- ============================================================
 
-create extension if not exists "uuid-ossp";
+-- pgcrypto provides gen_random_uuid()
 create extension if not exists "pgcrypto";
 
 -- ===== Profiles (1:1 with auth.users) =====
@@ -26,7 +26,7 @@ create index profiles_email_idx on public.profiles(email);
 
 -- ===== Vehicles =====
 create table public.vehicles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   make text not null,
   model text not null,
@@ -55,7 +55,7 @@ create index vehicles_archived_idx on public.vehicles(user_id) where archived_at
 
 -- ===== Fuel entries =====
 create table public.fuel_entries (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   vehicle_id uuid not null references public.vehicles(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   occurred_at timestamptz not null,
@@ -80,7 +80,7 @@ create index fuel_occurred_idx on public.fuel_entries(occurred_at desc);
 
 -- ===== Maintenance entries (immutable, hash-chained) =====
 create table public.maintenance_entries (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   vehicle_id uuid not null references public.vehicles(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   occurred_at timestamptz not null,
@@ -105,7 +105,7 @@ create index maint_occurred_idx on public.maintenance_entries(occurred_at desc);
 
 -- ===== Maintenance alerts (predicted) =====
 create table public.maintenance_alerts (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   vehicle_id uuid not null references public.vehicles(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   category text not null,
@@ -122,7 +122,7 @@ create index alerts_active_idx on public.maintenance_alerts(user_id) where dismi
 
 -- ===== Stations (public catalog, read-only for users) =====
 create table public.stations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   brand text not null,
   type text not null check (type in ('gas','charger')),
@@ -141,7 +141,7 @@ create index stations_geo_idx on public.stations(lat, lng);
 
 -- ===== Garages (public catalog, partner flag) =====
 create table public.garages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   address text not null,
   city text not null,
@@ -161,7 +161,7 @@ create index garages_partner_idx on public.garages(is_partner) where is_partner 
 
 -- ===== Subscriptions (Stripe) =====
 create table public.subscriptions (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   stripe_subscription_id text not null unique,
   tier text not null default 'premium',
@@ -176,7 +176,7 @@ create index subscriptions_user_idx on public.subscriptions(user_id);
 
 -- ===== Audit logs (append-only, immutable) =====
 create table public.audit_logs (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   action text not null,
   entity_type text not null,

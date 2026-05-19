@@ -1,18 +1,22 @@
 'use client';
 
-import { Bell, Search, Sun, Moon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell, Search, Sun, Moon, CircleHelp } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { Link } from '@/lib/i18n/routing';
 import { Logo } from './logo';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/components/user-context';
 
 export function Topbar({ title }: { title?: string }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const currentUser = useUser();
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-4 lg:px-8">
-      <div className="lg:hidden">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 backdrop-blur-xl px-4 lg:px-8">
+      <div className="lg:hidden shrink-0">
         <Logo showWordmark={false} />
       </div>
       {title && (
@@ -20,8 +24,8 @@ export function Topbar({ title }: { title?: string }) {
           {title}
         </h1>
       )}
-      <div className="ml-auto flex items-center gap-2">
-        <div className="hidden md:block relative">
+      <div className="ml-auto flex items-center gap-1">
+        <div className="hidden md:block relative mr-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
           <input
             placeholder="Rechercher…"
@@ -31,20 +35,33 @@ export function Topbar({ title }: { title?: string }) {
         <Button
           variant="ghost"
           size="icon"
+          className="h-9 w-9"
           aria-label="Basculer thème"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() =>
+            setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+          }
+          suppressHydrationWarning
         >
-          {theme === 'dark' ? (
-            <Sun className="h-4 w-4" strokeWidth={1.5} />
+          {mounted ? (
+            resolvedTheme === 'dark' ? (
+              <Sun className="h-4 w-4" strokeWidth={1.5} />
+            ) : (
+              <Moon className="h-4 w-4" strokeWidth={1.5} />
+            )
           ) : (
-            <Moon className="h-4 w-4" strokeWidth={1.5} />
+            <span className="h-4 w-4" aria-hidden="true" />
           )}
         </Button>
-        <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+        <Button variant="ghost" size="icon" className="h-9 w-9 relative" aria-label="Notifications">
           <Bell className="h-4 w-4" strokeWidth={1.5} />
-          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-eco" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-eco" />
         </Button>
-        <div className="lg:hidden">
+        <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Centre d'aide" asChild>
+          <Link href="/help">
+            <CircleHelp className="h-4 w-4" strokeWidth={1.5} />
+          </Link>
+        </Button>
+        <div className="lg:hidden ml-1">
           <Avatar name={currentUser.fullName} size="sm" />
         </div>
       </div>

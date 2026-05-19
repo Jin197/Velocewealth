@@ -80,7 +80,7 @@
   },
   "landing": {
     "hero": {
-      "badge": "Sans publicité — Premium dès 4,99 €/mois",
+      "badge": "Sans publicité — Pro dès 9,99 €/mois",
       "titleLead": "Pilotez votre voiture comme",
       "titleHighlight": "un investissement.",
       "subtitle": "Velocewealth transforme votre véhicule d'un poste de dépense en un patrimoine maîtrisé. Coût au km, carnet certifié, indice de revente — en un coup d'œil.",
@@ -149,7 +149,7 @@
       "q5": "Mon véhicule électrique est-il bien suivi ?",
       "a5": "Parfaitement. Velocewealth gère thermique, électrique et hybride. Le mix énergétique est calculé automatiquement, et les économies vs 100 % thermique sont mises en avant.",
       "q6": "Quelles sont les différences entre Standard et Premium ?",
-      "a6": "Standard est gratuit avec saisie manuelle limitée. Premium (4,99 €/mois) débloque l'OCR illimité, le carnet certifié exportable, le TCO complet, l'analyse éco-conduite et l'export fiscal frais réels."
+      "a6": "Standard est gratuit avec 3 scans OCR offerts/mois. Pro (9,99 €/mois) débloque l'OCR illimité, le carnet certifié exportable, le TCO complet, l'analyse éco-conduite et l'export fiscal frais réels."
     },
     "cta": {
       "title": "Prêt à reprendre le volant de vos finances auto ?",
@@ -165,16 +165,23 @@
     "standardName": "Standard",
     "standardDescription": "Pour commencer à comprendre vos coûts.",
     "standardCta": "Démarrer",
-    "premiumName": "Premium",
-    "premiumDescription": "L'expérience Velocewealth complète.",
+    "premiumName": "Pro",
+    "premiumDescription": "Pour les indépendants exigeants.",
     "premiumPerMonth": "€/mois",
-    "premiumPerYear": "ou 45 €/an (−25 %)",
+    "premiumPerYear": "ou 89 €/an (−25 %)",
     "premiumCtaMonthly": "Essai 30 jours · mensuel",
     "premiumCtaYearly": "Essai 30 jours · annuel −25 %",
+    "fleetName": "Fleet",
+    "fleetDescription": "Pour les TPE et petites flottes.",
+    "fleetPrice": "19,99",
+    "fleetPerMonth": "€/mois",
+    "fleetPerYear": "ou 199 €/an",
+    "fleetCta": "Souscrire",
     "partnerName": "Garage Partenaire",
-    "partnerDescription": "Mise en avant + prise de RDV directe.",
-    "partnerPrice": "Sur devis",
-    "partnerCta": "Devenir partenaire",
+    "partnerDescription": "SaaS Visibilité locale & leads.",
+    "partnerPrice": "49",
+    "partnerPerMonth": "€/mois",
+    "partnerCta": "Souscrire",
     "vatNote": "Tous les prix sont TTC. TVA appliquée selon votre pays via Stripe Tax."
   },
   "footer": {

@@ -20,7 +20,7 @@ export default function PreferencesPage() {
             Mode sombre par défaut, optimal pour le scan OCR
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { value: 'light', label: 'Clair', icon: Sun },
             { value: 'dark', label: 'Sombre', icon: Moon },

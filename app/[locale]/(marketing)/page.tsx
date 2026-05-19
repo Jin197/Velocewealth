@@ -1,3 +1,4 @@
+import { CheckoutButton } from './pricing/checkout-button';
 import { Link } from '@/lib/i18n/routing';
 import { setRequestLocale } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
@@ -12,6 +13,7 @@ import {
   Camera,
   Wrench,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -30,7 +32,7 @@ export default async function LandingPage({
       <HowItWorks />
       <Features />
       <Testimonials />
-      <PricingTeaser />
+      <Pricing />
       <FAQ />
       <CTA />
     </main>
@@ -230,34 +232,149 @@ function Testimonials() {
   );
 }
 
-function PricingTeaser() {
+function Pricing() {
   const t = useTranslations('pricing');
+  const tFeatures = useTranslations('landing.features');
+
+  const standardFeatures = [
+    '3 scans OCR offerts/mois',
+    'Rappels d\'entretien de base',
+    'Carte des stations',
+    '1 véhicule',
+  ];
+  const premiumFeatures = [
+    'OCR illimité',
+    'Suivi TCO complet',
+    'Export fiscal (frais réels)',
+    tFeatures('logTitle'),
+    tFeatures('resaleTitle'),
+    tFeatures('ecoTitle'),
+    'Véhicules illimités',
+  ];
+  const fleetFeatures = [
+    "Jusqu'à 5 véhicules",
+    'Gestion multi-comptes',
+    'Export comptable consolidé',
+    'Support prioritaire',
+    'Toutes les fonctions Pro'
+  ];
+  const partnerFeatures = [
+    'Visibilité prioritaire',
+    'Génération de leads',
+    'Prise de RDV intégrée',
+    'Profil garage enrichi',
+    'Statistiques de visites',
+  ];
+
   return (
-    <section className="container py-14 sm:py-20">
-      <Card variant="premium" className="p-6 sm:p-12 text-center grid sm:grid-cols-3 gap-5 sm:gap-6 items-center">
-        <div className="sm:text-start">
-          <Badge variant="premium" className="mb-3">
-            <Sparkles className="h-3 w-3" /> {t('mostChosen')}
-          </Badge>
-          <h3 className="font-display text-2xl font-bold">{t('premiumName')}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t('premiumDescription')}
-          </p>
-        </div>
-        <div className="text-center">
-          <div className="font-mono text-4xl sm:text-5xl font-bold tabular-nums">4,99</div>
-          <div className="text-sm text-muted-foreground">{t('premiumPerMonth')}</div>
-          <div className="text-xs text-eco mt-1">{t('premiumPerYear')}</div>
-        </div>
-        <div className="sm:text-end">
-          <Button size="xl" asChild className="w-full sm:w-auto">
-            <Link href="/pricing">
-              {t('premiumCtaMonthly')}
-              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-            </Link>
+    <section id="pricing" className="container py-14 sm:py-20">
+      <div className="text-center max-w-2xl mx-auto mb-12">
+        <Badge variant="premium">
+          <Sparkles className="h-3 w-3" /> {t('noAds')}
+        </Badge>
+        <h1 className="font-display text-4xl font-bold tracking-tight mt-4">
+          {t('title')}
+        </h1>
+        <p className="text-muted-foreground mt-3">{t('subtitle')}</p>
+      </div>
+
+      <div className="grid lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <Card className="p-8 flex flex-col">
+          <div className="font-display text-lg font-semibold">{t('standardName')}</div>
+          <p className="text-sm text-muted-foreground mt-1">{t('standardDescription')}</p>
+          <div className="mt-6 flex items-baseline gap-1">
+            <span className="font-mono text-4xl font-bold tabular-nums">0</span>
+            <span className="text-muted-foreground">€</span>
+          </div>
+          <ul className="mt-6 space-y-2.5 flex-1">
+            {standardFeatures.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm">
+                <Check className="h-4 w-4 text-eco shrink-0 mt-0.5" strokeWidth={2} />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <Button asChild variant="outline" className="mt-8">
+            <Link href="/signup">{t('standardCta')}</Link>
           </Button>
-        </div>
-      </Card>
+        </Card>
+
+        <Card variant="premium" className="p-8 flex flex-col relative">
+          <Badge variant="premium" className="absolute -top-3 left-1/2 -translate-x-1/2">
+            {t('mostChosen')}
+          </Badge>
+          <div className="font-display text-lg font-semibold">{t('premiumName')}</div>
+          <p className="text-sm text-muted-foreground mt-1">{t('premiumDescription')}</p>
+          <div className="mt-6 flex items-baseline gap-1">
+            <span className="font-mono text-4xl font-bold tabular-nums">9,99</span>
+            <span className="text-muted-foreground">{t('premiumPerMonth')}</span>
+          </div>
+          <div className="text-xs text-eco mt-1">{t('premiumPerYear')}</div>
+          <ul className="mt-6 space-y-2.5 flex-1">
+            {premiumFeatures.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm">
+                <Check className="h-4 w-4 text-eco shrink-0 mt-0.5" strokeWidth={2} />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 grid gap-2">
+            <CheckoutButton interval="monthly" label={t('premiumCtaMonthly')} />
+            <CheckoutButton
+              interval="yearly"
+              label={t('premiumCtaYearly')}
+              variant="outline"
+            />
+          </div>
+        </Card>
+
+        <Card className="p-8 flex flex-col">
+          <div className="font-display text-lg font-semibold">{t('fleetName')}</div>
+          <p className="text-sm text-muted-foreground mt-1">{t('fleetDescription')}</p>
+          <div className="mt-6 flex items-baseline gap-1">
+            <span className="font-mono text-4xl font-bold tabular-nums">{t('fleetPrice')}</span>
+            <span className="text-muted-foreground">{t('fleetPerMonth')}</span>
+          </div>
+          <div className="text-xs text-eco mt-1">{t('fleetPerYear')}</div>
+          <ul className="mt-6 space-y-2.5 flex-1">
+            {fleetFeatures.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm">
+                <Check className="h-4 w-4 text-eco shrink-0 mt-0.5" strokeWidth={2} />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <Button asChild variant="outline" className="mt-8">
+            <Link href="/signup">{t('fleetCta')}</Link>
+          </Button>
+        </Card>
+
+        <Card className="p-8 flex flex-col">
+          <div className="font-display text-lg font-semibold">{t('partnerName')}</div>
+          <p className="text-sm text-muted-foreground mt-1">{t('partnerDescription')}</p>
+          <div className="mt-6 flex items-baseline gap-1">
+            <span className="font-mono text-4xl font-bold tabular-nums">
+              {t('partnerPrice')}
+            </span>
+            <span className="text-muted-foreground">{t('partnerPerMonth')}</span>
+          </div>
+          <ul className="mt-6 space-y-2.5 flex-1">
+            {partnerFeatures.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm">
+                <Check className="h-4 w-4 text-eco shrink-0 mt-0.5" strokeWidth={2} />
+                {f}
+              </li>
+            ))}
+          </ul>
+          <Button variant="outline" className="mt-8" asChild>
+            <a href="mailto:partners@velocewealth.app">{t('partnerCta')}</a>
+          </Button>
+        </Card>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground mt-8">
+        {t('vatNote')}
+      </p>
     </section>
   );
 }

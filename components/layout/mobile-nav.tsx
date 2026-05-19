@@ -47,12 +47,12 @@ export function MobileNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 py-3 text-xs',
+                  'flex flex-col items-center gap-0.5 py-3 text-[10px] leading-tight',
                   active ? 'text-veloce' : 'text-muted-foreground',
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={1.5} />
-                {item.label}
+                <span className="truncate max-w-[56px] text-center">{item.label}</span>
               </Link>
             </li>
           );
