@@ -75,6 +75,12 @@
     "forgotSent": "Link sent",
     "forgotSentDescription": "If this address exists, you'll receive an email to reset your password within minutes.",
     "backToLogin": "Back to sign in",
+    "resetPasswordTitle": "New password",
+    "resetPasswordSubtitle": "Enter a strong password to secure your asset again.",
+    "resetPasswordButton": "Reset",
+    "resetPasswordSuccess": "Password saved!",
+    "resetPasswordSuccessDescription": "Your new password is now active. You will be redirected to the dashboard.",
+    "passwordLabelNew": "New password",
     "testimonial": "\"For the first time, I actually know how much my car costs per kilometer. It's addictive.\"",
     "testimonialAuthor": "— Marie L., Hybrid driver · Lyon"
   },

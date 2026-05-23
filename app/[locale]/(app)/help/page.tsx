@@ -8,8 +8,6 @@ import {
   Car,
   Brain,
   ScanLine,
-  Map,
-  CreditCard,
   Mail,
   ExternalLink,
 } from 'lucide-react';
@@ -46,12 +44,6 @@ const guides = [
     title: 'Diagnostic IA & Plan prédictif',
     desc: 'Notre IA analyse l\'usure réelle pour anticiper vos révisions.',
     href: '/dashboard',
-  },
-  {
-    icon: Map,
-    title: 'Carte du réseau',
-    desc: 'Trouvez les stations et garages partenaires proches.',
-    href: '/map',
   },
 ];
 

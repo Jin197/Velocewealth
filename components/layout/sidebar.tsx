@@ -7,7 +7,6 @@ import {
   Car,
   Fuel,
   Wrench,
-  Map,
   Leaf,
   Settings,
   Sparkles,
@@ -30,7 +29,6 @@ export function Sidebar() {
     { href: '/vehicles', label: t('vehicles'), icon: Car },
     { href: '/fuel', label: t('fuel'), icon: Fuel },
     { href: '/maintenance', label: t('maintenance'), icon: Wrench },
-    { href: '/map', label: t('map'), icon: Map },
     { href: '/eco-score', label: t('ecoScore'), icon: Leaf },
   ] as const;
 

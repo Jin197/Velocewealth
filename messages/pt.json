@@ -75,6 +75,12 @@
     "forgotSent": "Link enviado",
     "forgotSentDescription": "Se este endereço existir, receberá um email para redefinir a palavra-passe em poucos minutos.",
     "backToLogin": "Voltar a entrar",
+    "resetPasswordTitle": "Nova palavra-passe",
+    "resetPasswordSubtitle": "Saisissez un mot de passe robuste pour sécuriser à nouveau votre patrimoine.",
+    "resetPasswordButton": "Redefinir",
+    "resetPasswordSuccess": "Palavra-passe guardada",
+    "resetPasswordSuccessDescription": "A sua nova palavra-passe está ativa. Será redirecionado para o painel.",
+    "passwordLabelNew": "Nova palavra-passe",
     "testimonial": "«Pela primeira vez sei realmente quanto me custa o carro por quilómetro. É viciante.»",
     "testimonialAuthor": "— Marie L., condutora Híbrida · Lyon"
   },

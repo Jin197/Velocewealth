@@ -75,6 +75,12 @@
     "forgotSent": "Lien envoyé",
     "forgotSentDescription": "Si cette adresse existe, vous recevrez un email pour réinitialiser votre mot de passe d'ici quelques minutes.",
     "backToLogin": "Retour à la connexion",
+    "resetPasswordTitle": "Nouveau mot de passe",
+    "resetPasswordSubtitle": "Saisissez un mot de passe robuste pour sécuriser à nouveau votre patrimoine.",
+    "resetPasswordButton": "Réinitialiser",
+    "resetPasswordSuccess": "Mot de passe enregistré !",
+    "resetPasswordSuccessDescription": "Votre nouveau mot de passe est actif. Vous allez être redirigé vers le tableau de bord.",
+    "passwordLabelNew": "Nouveau mot de passe",
     "testimonial": "« Pour la première fois, je sais réellement combien me coûte ma voiture au kilomètre. C'est addictif. »",
     "testimonialAuthor": "— Marie L., conductrice Hybride · Lyon"
   },

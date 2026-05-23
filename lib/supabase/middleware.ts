@@ -7,7 +7,7 @@ const PROTECTED_PREFIXES = [
   '/vehicles',
   '/fuel',
   '/maintenance',
-  '/map',
+  '/reset-password',
   '/eco-score',
   '/settings',
 ];

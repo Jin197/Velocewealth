@@ -80,11 +80,31 @@ export async function forgotPasswordAction(
   if (!email.success) return { error: 'Email invalide' };
   const supabase = createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback?next=/settings/security`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback?next=/reset-password`,
   });
   if (error) return { error: error.message };
   return { ok: true };
 }
+
+export async function resetPasswordAction(
+  formData: FormData,
+): Promise<AuthResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
+  const password = z
+    .string()
+    .min(6, 'Mot de passe trop court (6 caractères min)')
+    .safeParse(formData.get('password'));
+  if (!password.success) {
+    return { error: password.error.errors[0]?.message ?? 'Données invalides' };
+  }
+  const supabase = createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: password.data,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 
 export async function logoutAction(): Promise<void> {
   if (!isSupabaseConfigured()) {

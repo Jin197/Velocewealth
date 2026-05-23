@@ -75,6 +75,12 @@
     "forgotSent": "تم إرسال الرابط",
     "forgotSentDescription": "إذا كان هذا العنوان موجودًا، ستتلقى بريدًا إلكترونيًا لإعادة تعيين كلمة المرور خلال دقائق.",
     "backToLogin": "العودة إلى تسجيل الدخول",
+    "resetPasswordTitle": "كلمة مرور جديدة",
+    "resetPasswordSubtitle": "Saisissez un mot de passe robuste pour sécuriser à nouveau votre patrimoine.",
+    "resetPasswordButton": "إعادة تعيين",
+    "resetPasswordSuccess": "تم حفظ كلمة المرور",
+    "resetPasswordSuccessDescription": "كلمة المرور الجديدة نشطة الآن. سيتم توجيهك إلى لوحة التحكم.",
+    "passwordLabelNew": "كلمة مرور جديدة",
     "testimonial": "«لأول مرة، أعرف فعلًا كم تكلفني سيارتي لكل كيلومتر. هذا يدعو للإدمان.»",
     "testimonialAuthor": "— Marie L.، سائقة هجينة · ليون"
   },

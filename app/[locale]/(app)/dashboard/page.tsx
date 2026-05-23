@@ -10,7 +10,6 @@ import {
   MapPin,
 } from 'lucide-react';
 import { PageHeader, Section } from '@/components/domain/page-header';
-import { StationsMap } from '@/components/domain/stations-map';
 import { KpiCard } from '@/components/domain/kpi-card';
 import { VehicleCard } from '@/components/domain/vehicle-card';
 import { AlertCard } from '@/components/domain/alert-card';
@@ -20,7 +19,7 @@ import { EnergyMix } from '@/components/domain/energy-mix';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoButton } from '@/components/domain/demo-button';
-import { getDashboardData, getStations, getGarages } from '@/lib/data';
+import { getDashboardData } from '@/lib/data';
 import {
   computeCostPerKm,
   energyMix,
@@ -35,10 +34,6 @@ export default async function DashboardPage() {
   }
 
   const { profile, vehicles, fuel, maintenance, alerts } = await getDashboardData();
-  const [stations, garages] = await Promise.all([
-    getStations(profile?.country),
-    getGarages(profile?.country)
-  ]);
 
   if (!profile || vehicles.length === 0) {
     return <EmptyState name={profile?.fullName} />;
@@ -201,20 +196,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Carte du Réseau à Proximité */}
-      <Section
-        title="Réseau VeloceWealth"
-        description="Stations et garages partenaires à proximité"
-        action={
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/map">
-              Voir la carte complète <ArrowRight className="h-3 w-3 ml-1.5" />
-            </Link>
-          </Button>
-        }
-      >
-        <StationsMap stations={stations} garages={garages} />
-      </Section>
+
 
       <Section
         title="Vos véhicules"
