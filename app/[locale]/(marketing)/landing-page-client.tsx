@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from '@/lib/i18n/routing';
@@ -189,7 +190,12 @@ export function LandingPageClient({ locale }: { locale: string }) {
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-xl font-sans leading-relaxed">
-              VeloceWealth est l'instrument financier haut de gamme conçu pour optimiser, certifier et maximiser la valeur de votre capital roulant.
+              <span className="text-[#007AFF] font-semibold block mb-1.5 tracking-wide uppercase text-sm font-mono">
+                {locale === 'fr' 
+                  ? '⚡ Pilotez votre voiture comme un investissement.' 
+                  : '⚡ Drive your car like a financial asset.'}
+              </span>
+              VeloceWealth est l\'instrument financier haut de gamme conçu pour optimiser, certifier et maximiser la valeur de votre capital roulant.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -226,23 +232,36 @@ export function LandingPageClient({ locale }: { locale: string }) {
             </div>
           </div>
 
-          {/* Interactive Hero Cockpit Mockup */}
+          {/* Interactive Hero Cockpit Mockup with Premium Concept Vehicle Background */}
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-tr from-[#007AFF]/25 to-indigo-500/10 blur-3xl rounded-[2.5rem] pointer-events-none" />
-            <div className="relative border border-white/[0.08] bg-[#16161A]/80 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+            <div className="absolute -inset-4 bg-gradient-to-tr from-[#007AFF]/35 to-indigo-500/15 blur-3xl rounded-[2.5rem] pointer-events-none" />
+            <div className="relative border border-white/[0.08] bg-[#16161A]/85 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden min-h-[460px] flex flex-col justify-between group">
+              {/* Premium Luxury Carbon Car Background */}
+              <div className="absolute inset-0 z-0 select-none pointer-events-none">
+                <Image
+                  src="/images/luxury-car.png"
+                  alt="VeloceWealth Premium Concept Car"
+                  fill
+                  priority
+                  sizes="(max-w-7xl) 100vw, 50vw"
+                  className="object-cover opacity-40 mix-blend-luminosity group-hover:scale-105 group-hover:opacity-55 transition-all duration-1000 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#16161A]/40 to-transparent" />
+              </div>
+
               {/* Cockpit laser decorative grid */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#007AFF]/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#007AFF]/5 rounded-full blur-2xl pointer-events-none z-0" />
               
-              <div className="flex items-center justify-between pb-6 border-b border-white/[0.06]">
+              <div className="relative z-10 flex items-center justify-between pb-6 border-b border-white/[0.06]">
                 <div className="flex items-center gap-3">
                   <div className="h-3 w-3 rounded-full bg-[#007AFF] animate-pulse" />
                   <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Live Cockpit</span>
                 </div>
-                <Badge className="bg-[#2D2D2D] text-[#007AFF]">Premium Active</Badge>
+                <Badge className="bg-[#2D2D2D]/90 text-[#007AFF] border border-[#007AFF]/20">Premium Active</Badge>
               </div>
 
               {/* Live monetary metric */}
-              <div className="py-6 space-y-2">
+              <div className="relative z-10 py-6 space-y-2">
                 <span className="text-xs text-muted-foreground font-mono uppercase">Indicateur TCO Courant</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-bold font-mono tracking-tight text-white tabular-nums">0,184</span>
@@ -250,18 +269,18 @@ export function LandingPageClient({ locale }: { locale: string }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pb-6">
-                <div className="p-4 bg-[#2D2D2D]/40 border border-white/[0.04] rounded-2xl space-y-1">
+              <div className="relative z-10 grid grid-cols-2 gap-4 pb-6">
+                <div className="p-4 bg-black/40 backdrop-blur-md border border-white/[0.06] rounded-2xl space-y-1">
                   <span className="text-xs text-muted-foreground font-mono">Mix Électrique</span>
                   <div className="text-lg font-bold text-white font-mono">78% <span className="text-xs font-normal text-emerald-400">⚡ Coût bas</span></div>
                 </div>
-                <div className="p-4 bg-[#2D2D2D]/40 border border-white/[0.04] rounded-2xl space-y-1">
+                <div className="p-4 bg-black/40 backdrop-blur-md border border-white/[0.06] rounded-2xl space-y-1">
                   <span className="text-xs text-muted-foreground font-mono">Kilométrage total</span>
                   <div className="text-lg font-bold text-white font-mono tabular-nums">{tcoDistance.toLocaleString(locale)} km</div>
                 </div>
               </div>
 
-              <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex items-center justify-between">
+              <div className="relative z-10 p-4 bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Leaf className="h-5 w-5 text-emerald-400" />
                   <div>
