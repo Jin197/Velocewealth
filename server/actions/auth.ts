@@ -13,13 +13,13 @@ import { checkPasswordBreach, BREACH_THRESHOLD } from '@/lib/security/hibp';
 import {
   isCaptchaConfigured,
   verifyCaptchaToken,
+  CAPTCHA_FAILURE_THRESHOLD,
 } from '@/lib/security/hcaptcha';
 import { peekRateLimitCount } from '@/lib/rate-limit';
 import {
   isCurrentDeviceTrusted,
   rememberDevice,
 } from '@/lib/security/trusted-devices';
-import { CAPTCHA_FAILURE_THRESHOLD } from './captcha';
 import {
   getClientIp,
   getUserAgent,

@@ -1,15 +1,11 @@
 'use server';
 
 import { peekRateLimitCount } from '@/lib/rate-limit';
-import { isCaptchaConfigured } from '@/lib/security/hcaptcha';
+import {
+  isCaptchaConfigured,
+  CAPTCHA_FAILURE_THRESHOLD,
+} from '@/lib/security/hcaptcha';
 import { getClientIp, hashEmail } from '@/lib/security/request-context';
-
-/**
- * Threshold above which the login form should display the hCaptcha widget.
- * 3 means: after the 3rd consecutive failure (within the 15-min rate window)
- * the client must produce a valid captcha token to attempt another login.
- */
-export const CAPTCHA_FAILURE_THRESHOLD = 3;
 
 /**
  * Returns whether the client should display the hCaptcha widget on the

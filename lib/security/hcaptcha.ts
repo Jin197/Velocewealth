@@ -18,6 +18,16 @@ import 'server-only';
  */
 const HCAPTCHA_VERIFY_URL = 'https://hcaptcha.com/siteverify';
 
+/**
+ * Threshold above which the login form should display the hCaptcha widget.
+ * 3 means: after the 3rd consecutive failure (within the 15-min rate window)
+ * the client must produce a valid captcha token to attempt another login.
+ *
+ * Declared here (not in the 'use server' captcha action file) because Next.js
+ * forbids non-async exports from server-action modules.
+ */
+export const CAPTCHA_FAILURE_THRESHOLD = 3;
+
 /** True when hCaptcha is configured AND the client has crossed the failure threshold. */
 export function isCaptchaConfigured(): boolean {
   return Boolean(
