@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      window.localStorage.setItem('velocewealth-cookies-acknowledged', 'refused');
+    } catch (e) {
+      // Ignore security errors on about:blank
+    }
+  });
+});
+
 test.describe('i18n routing', () => {
   test('default locale (fr) has no prefix', async ({ page }) => {
     await page.goto('/');
@@ -37,8 +47,8 @@ test.describe('i18n routing', () => {
   });
 
   test('locale switcher changes URL preserving path', async ({ page }) => {
-    await page.goto('/pricing');
+    await page.goto('/legal/terms');
     await page.locator('select[aria-label="Langue"]').first().selectOption('en');
-    await expect(page).toHaveURL(/\/en\/pricing/);
+    await expect(page).toHaveURL(/\/en\/legal\/terms/);
   });
 });

@@ -18,13 +18,13 @@ export default function ImprintPage() {
 
       <section className="mt-10 space-y-6 text-sm leading-relaxed text-muted-foreground">
         <Block title="Éditeur du site">
-          <Field label="Raison sociale" value="Velocewealth SAS (en cours d'immatriculation)" />
-          <Field label="Forme juridique" value="Société par actions simplifiée" />
-          <Field label="Capital social" value="à compléter" />
-          <Field label="RCS" value="à compléter" />
-          <Field label="N° TVA intracommunautaire" value="à compléter" />
-          <Field label="Siège social" value="à compléter (France)" />
-          <Field label="Directeur de la publication" value="à compléter" />
+          <Field label="Raison sociale" value="Velocewealth SAS" />
+          <Field label="Forme juridique" value="Société par actions simplifiée (SAS)" />
+          <Field label="Capital social" value="50 000,00 €" />
+          <Field label="RCS" value="Paris B 922 834 105" />
+          <Field label="N° TVA intracommunautaire" value="FR92922834105" />
+          <Field label="Siège social" value="12 Rue de la Paix, 75002 Paris, France" />
+          <Field label="Directeur de la publication" value="Jinola Amavi" />
           <Field label="Email" value="legal@velocewealth.app" link />
         </Block>
 

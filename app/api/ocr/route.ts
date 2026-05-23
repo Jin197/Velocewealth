@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // Rate limit per user
-    const rl = rateLimit(`ocr:${user.id}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW);
+    const rl = await rateLimit(`ocr:${user.id}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW);
     if (!rl.ok) {
       return NextResponse.json(
         { error: 'Trop de requêtes, réessayez dans quelques secondes' },
@@ -76,6 +76,21 @@ export async function POST(req: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await parseFuelReceipt(buffer);
+
+    // Log credit consumption in audit_logs
+    await supabase.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'ocr.scan',
+      entity_type: 'profile',
+      entity_id: user.id,
+      payload: {
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        plan_tier: profile.plan_tier,
+        credits_used_before: profile.ocr_credits_used ?? 0,
+      },
+    });
 
     // Increment OCR usage for free tier
     if (profile.plan_tier === 'free') {

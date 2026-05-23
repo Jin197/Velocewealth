@@ -20,22 +20,42 @@ export interface PrognosticComponent {
   anomalyReason?: string;
 }
 
+// Seuils de fonctionnement normaux pour calcul des Z-scores
+const COOLANT_TEMP_MEAN = 90.0;    // °C
+const COOLANT_TEMP_STDDEV = 5.0;  // °C
+const BATTERY_VOLT_MEAN = 14.0;   // V
+const BATTERY_VOLT_STDDEV = 0.3;  // V
+
+/**
+ * Calcule le Z-score d'une valeur par rapport à une moyenne et un écart-type.
+ */
+export function calculateZScore(value: number, mean: number, stdDev: number): number {
+  return (value - mean) / stdDev;
+}
+
 /**
  * 1. PHASE INTRODUCTIVE : Détection d'Anomalie (Z-Score & Limites Fixes)
- * Simule le One-Class SVM / Autoencodeur en vérifiant si les paramètres 
- * dévient des seuils de normalité (calcul d'écart).
+ * Évalue si les paramètres OBD s'écartent significativement de la normale en calculant
+ * des Z-scores.
  */
 export function detectAnomaly(telemetry: TelemetryData): { flag: boolean; reason?: string } {
   const anomalies: string[] = [];
 
-  // Ex: Surchauffe moteur
-  if (telemetry.coolantTemp > 105) anomalies.push('Température liquide de refroidissement critique');
+  // Z-Score Coolant Temperature (Surchauffe)
+  const zCoolant = calculateZScore(telemetry.coolantTemp, COOLANT_TEMP_MEAN, COOLANT_TEMP_STDDEV);
+  if (zCoolant > 3.0) {
+    anomalies.push(`Surchauffe moteur détectée (Z-Score Coolant: +${zCoolant.toFixed(1)})`);
+  }
   
-  // Ex: Batterie faible (moteur tournant)
-  if (telemetry.rpm > 500 && telemetry.batteryVoltage < 13.0) anomalies.push('Tension alternateur/batterie anormale');
+  // Z-Score Battery Voltage (moteur tournant)
+  if (telemetry.rpm > 500) {
+    const zBattery = calculateZScore(telemetry.batteryVoltage, BATTERY_VOLT_MEAN, BATTERY_VOLT_STDDEV);
+    if (zBattery < -3.0) {
+      anomalies.push(`Tension alternateur/batterie critique (Z-Score Tension: ${zBattery.toFixed(1)})`);
+    }
+  }
   
-  // Ex: Problème d'admission d'air (MAF anormal par rapport au RPM)
-  // Approximation : MAF (g/s) devrait être proportionnel au RPM et Engine Load
+  // Admission d'air (MAF anormal par rapport au RPM)
   if (telemetry.rpm > 2000 && telemetry.engineLoad > 50 && telemetry.maf < 10) {
     anomalies.push('Débit d\'air massique (MAF) anormalement bas (Filtre obstrué ou fuite)');
   }
@@ -49,34 +69,50 @@ export function detectAnomaly(telemetry: TelemetryData): { flag: boolean; reason
 /**
  * 2. ANALYSE DE SURVIE : Distribution de Weibull (RUL)
  * Calcule la Durée de Vie Utile Restante (Remaining Useful Life) en fonction 
- * du kilométrage actuel de la pièce et de son espérance de vie (Weibull shape).
+ * du kilométrage actuel de la pièce et de son espérance de vie.
+ * Calibré avec le paramètre de forme beta (beta > 1 indique une usure progressive accrue).
  */
-export function calculateWeibullRUL(currentKm: number, expectedLifetimeKm: number): number {
-  // Simplification du Cox Proportional Hazards pour l'implémentation TypeScript
-  // RUL = Expected - Current
-  // Si Current > Expected, on est en zone de risque de panne imminente (RUL = 0)
+export function calculateWeibullRUL(currentKm: number, expectedLifetimeKm: number, beta: number = 2.0): number {
   const baseRul = expectedLifetimeKm - currentKm;
   
-  // Ajout d'une variance simulant la courbe de survie
-  const survivalProbability = Math.exp(-Math.pow(currentKm / expectedLifetimeKm, 2)); // Shape parameter beta=2 (usure croissante)
+  // Courbe de survie de Weibull : R(t) = exp(-(t / eta)^beta)
+  // On pose eta = expectedLifetimeKm
+  const survivalProbability = Math.exp(-Math.pow(currentKm / expectedLifetimeKm, beta));
   
   const estimatedRul = baseRul > 0 ? Math.round(baseRul * survivalProbability) : 0;
   return Math.max(0, estimatedRul);
 }
 
 /**
- * 3. CLASSIFICATION D'ÉTAT : Simule un Random Forest
- * Détermine la classe (0, 1, 2) et le taux de confiance basé sur le RUL et les anomalies.
+ * Retourne le paramètre de forme Weibull beta adapté à la nature physique du composant.
  */
-export function classifyComponentState(rulKm: number, expectedLifetimeKm: number, hasAnomaly: boolean): { status: PrognosticComponent['status']; confidence: number } {
+export function getWeibullBeta(compName: string): number {
+  const lower = compName.toLowerCase();
+  if (lower.includes('huile')) return 2.0;       // Usure linéaire standard
+  if (lower.includes('frein')) return 2.2;       // Usure accélérée vers la fin
+  if (lower.includes('filtre')) return 1.8;      // Colmatage exponentiel doux
+  if (lower.includes('pneumatique')) return 2.5;  // Usure accélérée par friction
+  return 2.0;                                   // Valeur par défaut
+}
+
+/**
+ * 3. CLASSIFICATION D'ÉTAT : Simule un Random Forest
+ * Détermine l'état du composant et calcule un taux de confiance déterministe
+ * basé sur la distribution probabiliste du RUL et des alertes d'anomalies.
+ */
+export function classifyComponentState(
+  rulKm: number, 
+  expectedLifetimeKm: number, 
+  hasAnomaly: boolean
+): { status: PrognosticComponent['status']; confidence: number } {
   const lifePercentageRemaining = rulKm / expectedLifetimeKm;
   
   let status: PrognosticComponent['status'] = 'Excellent';
-  let confidenceBase = 0.95; // 95% confiant par défaut
+  let confidenceBase = 0.95; // 95%
   
   if (hasAnomaly) {
     status = 'Remplacement imminent';
-    confidenceBase = 0.89; // L'anomalie réduit légèrement la confiance si elle contredit le RUL
+    confidenceBase = 0.89; // L'anomalie réduit légèrement la confiance en raison du signal bruité
   } else if (lifePercentageRemaining < 0.15) {
     status = 'Remplacement imminent';
     confidenceBase = 0.94;
@@ -85,9 +121,13 @@ export function classifyComponentState(rulKm: number, expectedLifetimeKm: number
     confidenceBase = 0.91;
   }
 
-  // Ajout d'un léger bruit aléatoire pour simuler la sortie de probabilité d'un modèle ML
-  const noise = (Math.random() * 4 - 2) / 100; // +/- 2%
-  const confidence = Math.min(99.9, Math.max(0.0, (confidenceBase + noise) * 100));
+  // Calcul déterministe de bruit pseudo-aléatoire (+/- 2%) basé sur les paramètres physiques
+  // Évite les fluctuations incohérentes du Math.random() à chaque rechargement.
+  const seed = rulKm + expectedLifetimeKm + (hasAnomaly ? 42 : 0);
+  const hash = Math.abs(Math.sin(seed) * 1000);
+  const noise = (hash - Math.floor(hash) - 0.5) * 4; // Entre -2% et +2%
+  
+  const confidence = Math.min(99.9, Math.max(0.0, (confidenceBase * 100) + noise));
 
   return {
     status,
@@ -110,10 +150,11 @@ export function evaluateVehicleHealth(
 
   for (const comp of componentsData) {
     const kmDrivenOnPart = currentMileage - comp.lastChangedKm;
-    const rulKm = calculateWeibullRUL(kmDrivenOnPart, comp.expectedLifetimeKm);
+    const beta = getWeibullBeta(comp.name);
+    const rulKm = calculateWeibullRUL(kmDrivenOnPart, comp.expectedLifetimeKm, beta);
     
-    // Pour simplifier, si c'est le Filtre à air, on relie l'anomalie MAF
-    const isEngineAnomaly = !!(anomalyCheck.flag && anomalyCheck.reason?.includes('Filtre'));
+    // Pour le Filtre à air, on relie l'anomalie MAF ou surchauffe générale
+    const isEngineAnomaly = !!(anomalyCheck.flag && (anomalyCheck.reason?.includes('Filtre') || anomalyCheck.reason?.includes('Surchauffe')));
     const compAnomaly = comp.name.includes('Filtre') ? isEngineAnomaly : false;
 
     const classification = classifyComponentState(rulKm, comp.expectedLifetimeKm, compAnomaly);

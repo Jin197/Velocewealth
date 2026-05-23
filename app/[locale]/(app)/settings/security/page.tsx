@@ -1,15 +1,62 @@
+'use client';
+
+import { useState, useTransition } from 'react';
 import { Shield, Smartphone, Key, AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input, Label } from '@/components/ui/input';
+import { Confirm } from '@/components/ui/confirm';
+import { exportUserDataAction, deleteAccountAction } from '@/server/actions/gdpr';
+import { logoutAction } from '@/server/actions/auth';
 
 export default function SecurityPage() {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isExporting, startExport] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
+
+  const handleExport = () => {
+    startExport(async () => {
+      try {
+        const result = await exportUserDataAction();
+        if (result.ok && result.data) {
+          const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(result.data, null, 2));
+          const downloadAnchor = document.createElement('a');
+          downloadAnchor.setAttribute('href', dataStr);
+          downloadAnchor.setAttribute('download', `velocewealth-export-${result.data.userId || 'data'}.json`);
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          downloadAnchor.remove();
+        } else {
+          alert(result.error || 'Erreur lors de l’exportation des données.');
+        }
+      } catch (err) {
+        alert('Une erreur est survenue lors de l’export des données.');
+      }
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    startDelete(async () => {
+      try {
+        const result = await deleteAccountAction();
+        if (result.ok) {
+          await logoutAction();
+        } else {
+          alert(result.error || 'Erreur lors de la suppression du compte.');
+        }
+      } catch (err) {
+        alert('Une erreur est survenue lors de la suppression de votre compte.');
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6 space-y-5">
         <div className="flex items-start gap-3">
-          <div className="rounded-btn bg-veloce/10 text-veloce p-2.5">
+          <div className="rounded-btn bg-[#007AFF]/10 text-[#007AFF] p-2.5">
             <Key className="h-5 w-5" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
@@ -36,7 +83,7 @@ export default function SecurityPage() {
 
       <Card className="p-6">
         <div className="flex items-center gap-3">
-          <div className="rounded-btn bg-eco/10 text-eco p-2.5">
+          <div className="rounded-btn bg-[#30D158]/10 text-[#30D158] p-2.5">
             <Shield className="h-5 w-5" strokeWidth={1.5} />
           </div>
           <div className="flex-1">
@@ -94,11 +141,16 @@ export default function SecurityPage() {
           Mes données (RGPD)
         </h2>
         <div className="grid sm:grid-cols-2 gap-3">
-          <Button variant="outline">
-            <Download className="h-4 w-4" /> Exporter mes données
+          <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+            <Download className="h-4 w-4" /> {isExporting ? 'Exportation...' : 'Exporter mes données'}
           </Button>
-          <Button variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10">
-            <Trash2 className="h-4 w-4" /> Supprimer mon compte
+          <Button
+            variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4" /> {isDeleting ? 'Suppression...' : 'Supprimer mon compte'}
           </Button>
         </div>
       </Card>
@@ -114,6 +166,17 @@ export default function SecurityPage() {
           </div>
         </div>
       </Card>
+
+      <Confirm
+        open={showDeleteConfirm}
+        title="Supprimer définitivement le compte ?"
+        description="Cette action est irréversible et supprimera l'ensemble de vos véhicules, dépenses énergétiques, historiques d'entretien et données personnelles de nos serveurs conformément à la réglementation RGPD."
+        confirmLabel="Supprimer mon compte"
+        cancelLabel="Conserver mon compte"
+        destructive
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

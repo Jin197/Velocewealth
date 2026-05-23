@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { env } from '@/lib/env';
+import { trackCriticalError } from '@/lib/telemetry';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,6 +27,9 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, env.stripeWebhookSecret());
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Bad signature';
+    const errorObj = err instanceof Error ? err : new Error(msg);
+    // Track Stripe validation / signature failure as Stripe critical error
+    trackCriticalError(errorObj, 'stripe');
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
@@ -62,7 +66,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true });
     }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Webhook error';
+    const errorObj = e instanceof Error ? e : new Error(String(e));
+    const isSupabase = errorObj.message.includes('Supabase error');
+    
+    // Track database/webhook process error
+    trackCriticalError(errorObj, isSupabase ? 'supabase' : 'stripe');
+
+    const msg = errorObj.message;
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
@@ -74,26 +84,42 @@ async function syncSubscription(
   sub: Stripe.Subscription,
 ) {
   // Find user via stripe_customer_id
-  const { data: profile } = await admin
+  const { data: profile, error: findError } = await admin
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', sub.customer as string)
     .single();
-  if (!profile) return;
+  
+  if (findError) {
+    if (findError.code !== 'PGRST116') {
+      throw new Error(`Supabase error (profile find): ${findError.message}`);
+    }
+    return;
+  }
 
-  const tier: 'free' | 'premium' =
-    sub.status === 'active' || sub.status === 'trialing' ? 'premium' : 'free';
+  const priceId = sub.items.data[0]?.price.id;
+  const subTier: 'premium' | 'family' =
+    priceId === env.stripePriceFamilyMonthly() || priceId === env.stripePriceFamilyYearly()
+      ? 'family'
+      : 'premium';
 
-  await admin
+  const planTier: 'free' | 'premium' | 'family' =
+    sub.status === 'active' || sub.status === 'trialing' ? subTier : 'free';
+
+  const { error: updateError } = await admin
     .from('profiles')
-    .update({ plan_tier: tier })
+    .update({ plan_tier: planTier })
     .eq('id', profile.id);
+  
+  if (updateError) {
+    throw new Error(`Supabase error (profile update): ${updateError.message}`);
+  }
 
-  await admin.from('subscriptions').upsert(
+  const { error: upsertError } = await admin.from('subscriptions').upsert(
     {
       user_id: profile.id,
       stripe_subscription_id: sub.id,
-      tier: 'premium',
+      tier: subTier,
       status: sub.status,
       current_period_end: new Date(
         (sub as unknown as { current_period_end: number }).current_period_end *
@@ -103,17 +129,35 @@ async function syncSubscription(
     },
     { onConflict: 'stripe_subscription_id' },
   );
+
+  if (upsertError) {
+    throw new Error(`Supabase error (subscription upsert): ${upsertError.message}`);
+  }
 }
 
 async function downgradeUserByCustomer(
   admin: ReturnType<typeof createAdminClient>,
   customerId: string,
 ) {
-  const { data: profile } = await admin
+  const { data: profile, error: findError } = await admin
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
     .single();
-  if (!profile) return;
-  await admin.from('profiles').update({ plan_tier: 'free' }).eq('id', profile.id);
+
+  if (findError) {
+    if (findError.code !== 'PGRST116') {
+      throw new Error(`Supabase error (profile find for downgrade): ${findError.message}`);
+    }
+    return;
+  }
+
+  const { error: updateError } = await admin
+    .from('profiles')
+    .update({ plan_tier: 'free' })
+    .eq('id', profile.id);
+
+  if (updateError) {
+    throw new Error(`Supabase error (profile downgrade): ${updateError.message}`);
+  }
 }

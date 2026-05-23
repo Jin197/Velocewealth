@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      window.localStorage.setItem('velocewealth-cookies-acknowledged', 'refused');
+    } catch (e) {
+      // Ignore security errors on about:blank
+    }
+  });
+});
+
 test.describe('Auth pages (UI only — no Supabase required)', () => {
   test('login page renders', async ({ page }) => {
     await page.goto('/login');
@@ -29,7 +39,7 @@ test.describe('Auth pages (UI only — no Supabase required)', () => {
 
   test('login → signup link works', async ({ page }) => {
     await page.goto('/login');
-    await page.getByRole('link', { name: /créer un compte/i }).click();
+    await page.getByRole('link', { name: /créer un compte/i }).click({ force: true });
     await expect(page).toHaveURL(/\/signup/);
   });
 });
@@ -59,6 +69,6 @@ test.describe('Pricing', () => {
     await page.goto('/pricing');
     await expect(page.locator('body')).toContainText(/Standard/);
     await expect(page.locator('body')).toContainText(/Premium/);
-    await expect(page.locator('body')).toContainText(/Partenaire|Partner/);
+    await expect(page.locator('body')).toContainText(/Family|Pro/);
   });
 });

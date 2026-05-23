@@ -110,7 +110,7 @@ Garde la commande `stripe listen` tournante dans un terminal pendant que tu dév
 
 ### 2.6 Webhook — prod (après déploiement)
 1. **Developers → Webhooks → Add endpoint**
-2. URL : `https://ton-domaine.com/api/stripe/webhook`
+2. URL : `https://velocewealth.app/api/stripe/webhook` (ou votre domaine de production Vercel)
 3. Events à écouter :
    - `checkout.session.completed`
    - `customer.subscription.created`
@@ -158,7 +158,10 @@ Garde la commande `stripe listen` tournante dans un terminal pendant que tu dév
 
 1. https://account.mapbox.com → compte gratuit (50 000 chargements/mois)
 2. **Tokens → Default public token** → copie-le dans `NEXT_PUBLIC_MAPBOX_TOKEN`
-3. **Pour la prod** : crée un token restreint avec `URL restrictions` = ton domaine
+3. **Pour la prod** : crée un token restreint avec `URL restrictions` pour sécuriser vos quotas :
+   - `https://velocewealth.app`
+   - `https://*.velocewealth.app`
+   - `http://localhost:*` (pour préserver le développement local)
 
 La carte interactive activée Phase 4. Sans token, la page `/map` affiche un placeholder.
 

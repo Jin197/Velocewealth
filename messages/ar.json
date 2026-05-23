@@ -202,12 +202,27 @@
     "title": "ملفات تعريف الارتباط الأساسية فقط",
     "description": "Velocewealth يستخدم فقط ملفات تعريف ارتباط ضرورية (الجلسة، التفضيلات). لا كوكيز إعلانية، لا تتبع طرف ثالث.",
     "accept": "فهمت",
-    "manage": "إدارة"
+    "manage": "إدارة",
+    "acceptAll": "قبول الكل",
+    "refuseAll": "رفض الكل"
   },
   "legal": {
     "termsTitle": "شروط الاستخدام",
     "privacyTitle": "سياسة الخصوصية",
     "mentionsTitle": "البيانات القانونية",
     "lastUpdated": "آخر تحديث"
+  },
+  "photoUpload": {
+    "unsupportedFormat": "صيغة غير مدعومة. استخدم JPEG أو PNG أو WebP.",
+    "fileTooHeavy": "الملف كبير جدًا (الحد الأقصى 5 ميجابايت).",
+    "uploadError": "خطأ أثناء التحميل.",
+    "uploadSuccess": "تم حفظ الصورة",
+    "changePhoto": "تغيير الصورة",
+    "delete": "حذف",
+    "uploading": "جاري التحميل...",
+    "registered": "تم الحفظ",
+    "dropHere": "أفلت الملف هنا",
+    "addPhoto": "إضافة صورة",
+    "dragDropHint": "اسحب وأفلت الملف أو انقر هنا · JPEG, PNG, WebP · الحد الأقصى 5 ميجابايت"
   }
 }

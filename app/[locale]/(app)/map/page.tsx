@@ -110,34 +110,36 @@ export default async function MapPage() {
             <div className="space-y-2">
               {partnerGarages.map((g) => (
                 <Card key={g.id} variant="premium" className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-btn bg-veloce/10 text-veloce p-2 shrink-0">
-                      <Star className="h-4 w-4" strokeWidth={2} />
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="rounded-btn bg-veloce/10 text-veloce p-2 shrink-0">
+                        <Star className="h-4 w-4" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium flex items-center gap-2">
+                          {g.name}
+                          <span className="font-mono text-xs">{g.rating}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({g.reviewCount})
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {g.address} · {g.city}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {g.services.slice(0, 4).map((s) => (
+                            <Badge
+                              key={s}
+                              variant="muted"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium flex items-center gap-2">
-                        {g.name}
-                        <span className="font-mono text-xs">{g.rating}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({g.reviewCount})
-                        </span>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {g.address} · {g.city}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {g.services.slice(0, 4).map((s) => (
-                          <Badge
-                            key={s}
-                            variant="muted"
-                            className="text-[10px] px-1.5 py-0"
-                          >
-                            {s}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <Button size="sm">Prendre RDV</Button>
+                    <Button size="sm" className="w-full sm:w-auto mt-2 sm:mt-0 shrink-0 self-center">Prendre RDV</Button>
                   </div>
                 </Card>
               ))}

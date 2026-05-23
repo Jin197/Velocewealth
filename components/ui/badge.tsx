@@ -15,6 +15,8 @@ const badgeVariants = cva(
         outline: 'text-foreground border-border',
         premium:
           'border-veloce/30 bg-gradient-to-r from-veloce/10 to-eco/10 text-veloce',
+        family:
+          'border-veloce/30 bg-gradient-to-r from-veloce/20 to-amber-500/20 text-veloce font-semibold',
       },
     },
     defaultVariants: { variant: 'default' },

@@ -1,11 +1,48 @@
 import { NextResponse } from 'next/server';
 import { searchKnowledgeBase, SYSTEM_PROMPT } from '@/lib/knowledge-base';
+import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Simulated delay to mimic AI thinking
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(req: Request) {
   try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Non authentifié' },
+        { status: 401 }
+      );
+    }
+
+    // 1. Rate-limiting (20 requêtes par heure)
+    const rl = await rateLimit(`chat:${user.id}`, 20, 3600_000);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes. Veuillez réessayer d’ici une heure.' },
+        { status: 429 }
+      );
+    }
+
+    // 2. Premium Gate check
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan_tier')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.plan_tier === 'free') {
+      return NextResponse.json(
+        { error: 'Le module Chat Assistant est réservé aux membres Premium.' },
+        { status: 403 }
+      );
+    }
+
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -18,7 +55,7 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1].content;
     const apiKey = process.env.OPENAI_API_KEY;
 
-    // Si on a une clé API OpenAI, on fait l'appel réel (à adapter selon le SDK utilisé si on installe @ai-sdk)
+    // Si on a une clé API OpenAI, on fait l'appel réel
     if (apiKey) {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

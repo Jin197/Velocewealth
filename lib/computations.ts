@@ -36,7 +36,15 @@ export function computeCostPerKm(
 
   const energy = fuelInRange.reduce((s, f) => s + f.totalPrice, 0);
   const maint = maintInRange.reduce((s, m) => s + m.cost, 0);
-  const insurance = (vehicle.insuranceMonthly ?? 0) * monthsBack;
+
+  const purchaseTime = new Date(vehicle.purchaseDate).getTime();
+  let actualMonths = monthsBack;
+  if (!isNaN(purchaseTime)) {
+    const msDiff = Date.now() - purchaseTime;
+    const monthsOwned = msDiff > 0 ? msDiff / (30 * 24 * 60 * 60 * 1000) : 0;
+    actualMonths = Math.max(1, Math.min(monthsBack, Math.round(monthsOwned)));
+  }
+  const insurance = (vehicle.insuranceMonthly ?? 0) * actualMonths;
 
   const mileages = fuelInRange.map((f) => f.mileageKm).filter(Boolean);
   const distance =
@@ -61,18 +69,25 @@ export function computeCostPerKm(
 export function energyMix(fuel: FuelEntry[]) {
   const totals = fuel.reduce(
     (acc, f) => {
-      if (f.energyType === 'electric') acc.electric += f.totalPrice;
-      else acc.thermal += f.totalPrice;
+      if (f.energyType === 'electric') {
+        acc.electricAmount += f.totalPrice;
+        acc.electricVolume += f.quantity || 0;
+      } else {
+        acc.thermalAmount += f.totalPrice;
+        acc.thermalVolume += f.quantity || 0;
+      }
       return acc;
     },
-    { thermal: 0, electric: 0 },
+    { thermalAmount: 0, electricAmount: 0, thermalVolume: 0, electricVolume: 0 },
   );
-  const sum = totals.thermal + totals.electric;
+  const sumAmount = totals.thermalAmount + totals.electricAmount;
   return {
-    thermal: sum > 0 ? totals.thermal / sum : 0,
-    electric: sum > 0 ? totals.electric / sum : 0,
-    thermalAmount: totals.thermal,
-    electricAmount: totals.electric,
+    thermal: sumAmount > 0 ? totals.thermalAmount / sumAmount : 0,
+    electric: sumAmount > 0 ? totals.electricAmount / sumAmount : 0,
+    thermalAmount: totals.thermalAmount,
+    electricAmount: totals.electricAmount,
+    thermalVolume: totals.thermalVolume,
+    electricVolume: totals.electricVolume,
   };
 }
 
@@ -92,8 +107,9 @@ export function monthlySpend(
   fuel: FuelEntry[],
   maintenance: MaintenanceEntry[],
   monthsBack: number = 6,
+  vehicles?: Vehicle[],
 ) {
-  const months: { label: string; total: number; energy: number; maint: number }[] = [];
+  const months: { label: string; total: number; energy: number; maint: number; insurance: number }[] = [];
   const now = new Date();
   for (let i = monthsBack - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -111,7 +127,24 @@ export function monthlySpend(
           new Date(m.occurredAt) >= d && new Date(m.occurredAt) < next,
       )
       .reduce((s, m) => s + m.cost, 0);
-    months.push({ label, total: energy + maint, energy, maint });
+      
+    let insurance = 0;
+    if (vehicles) {
+      for (const v of vehicles) {
+        const purchaseTime = new Date(v.purchaseDate).getTime();
+        if (isNaN(purchaseTime) || purchaseTime < next.getTime()) {
+          insurance += v.insuranceMonthly ?? 0;
+        }
+      }
+    }
+    
+    months.push({
+      label,
+      total: energy + maint + insurance,
+      energy,
+      maint,
+      insurance,
+    });
   }
   return months;
 }

@@ -21,6 +21,8 @@ export const env = {
   stripeWebhookSecret: () => required('STRIPE_WEBHOOK_SECRET'),
   stripePriceMonthly: () => required('STRIPE_PRICE_MONTHLY'),
   stripePriceYearly: () => required('STRIPE_PRICE_YEARLY'),
+  stripePriceFamilyMonthly: () => required('STRIPE_PRICE_FAMILY_MONTHLY'),
+  stripePriceFamilyYearly: () => required('STRIPE_PRICE_FAMILY_YEARLY'),
   googleVisionCredentials: () => required('GOOGLE_APPLICATION_CREDENTIALS_JSON'),
 };
 

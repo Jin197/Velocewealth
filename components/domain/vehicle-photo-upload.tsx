@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { Camera, Upload, X, Loader2, CheckCircle2, ImageIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 interface VehiclePhotoUploadProps {
@@ -12,6 +13,7 @@ interface VehiclePhotoUploadProps {
 }
 
 export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePhotoUploadProps) {
+  const t = useTranslations('photoUpload');
   const [preview, setPreview] = useState<string | null>(null);
   const [storagePath, setStoragePath] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
@@ -22,11 +24,11 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
   const processFile = useCallback(async (file: File) => {
     // Client-side validation
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Format non supporté. Utilisez JPEG, PNG ou WebP.');
+      toast.error(t('unsupportedFormat'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image trop lourde (max 5 Mo).');
+      toast.error(t('fileTooHeavy'));
       return;
     }
 
@@ -51,7 +53,7 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Erreur lors de l\'upload');
+        throw new Error(data.error || t('uploadError'));
       }
 
       const { path, signedUrl } = await res.json();
@@ -65,15 +67,15 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
       }
 
       onUploaded?.(path, signedUrl || localUrl);
-      toast.success('Photo enregistrée');
+      toast.success(t('uploadSuccess'));
     } catch (err: any) {
-      toast.error(err.message || 'Échec de l\'upload');
+      toast.error(err.message || t('uploadError'));
       setPreview(null);
       setStoragePath('');
     } finally {
       setIsUploading(false);
     }
-  }, [onUploaded]);
+  }, [onUploaded, t]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -124,17 +126,19 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
               type="button"
               onClick={() => inputRef.current?.click()}
               className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 transition-colors"
-              title="Changer la photo"
+              title={t('changePhoto')}
+              aria-label={t('changePhoto')}
             >
-              <Camera className="h-5 w-5 text-white" />
+              <Camera className="h-5 w-5 text-white" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={removePhoto}
               className="p-2.5 rounded-full bg-red-500/20 hover:bg-red-500/40 backdrop-blur-sm border border-red-500/20 transition-colors"
-              title="Supprimer"
+              title={t('delete')}
+              aria-label={t('delete')}
             >
-              <X className="h-5 w-5 text-red-400" />
+              <X className="h-5 w-5 text-red-400" aria-hidden="true" />
             </button>
           </div>
 
@@ -142,12 +146,12 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
           {isUploading ? (
             <div className="absolute bottom-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-xs text-white">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Upload en cours…
+              {t('uploading')}
             </div>
           ) : storagePath ? (
             <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-eco/20 backdrop-blur-sm text-xs text-eco">
               <CheckCircle2 className="h-3 w-3" />
-              Enregistrée
+              {t('registered')}
             </div>
           ) : null}
 
@@ -169,6 +173,7 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          aria-label={t('addPhoto')}
           className={`
             w-full aspect-[16/9] rounded-card border-2 border-dashed
             transition-all duration-200 ease-out
@@ -183,24 +188,24 @@ export function VehiclePhotoUpload({ name = 'imageUrl', onUploaded }: VehiclePho
           {isUploading ? (
             <>
               <Loader2 className="h-8 w-8 text-veloce animate-spin" />
-              <span className="text-sm text-muted-foreground">Upload en cours…</span>
+              <span className="text-sm text-muted-foreground">{t('uploading')}</span>
             </>
           ) : isDragOver ? (
             <>
               <Upload className="h-8 w-8 text-veloce animate-bounce" />
-              <span className="text-sm text-veloce font-medium">Déposez ici</span>
+              <span className="text-sm text-veloce font-medium">{t('dropHere')}</span>
             </>
           ) : (
             <>
               <div className="p-3 rounded-full bg-muted/50">
-                <ImageIcon className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
+                <ImageIcon className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
               </div>
               <div className="text-center">
                 <span className="text-sm font-medium text-foreground">
-                  Ajouter une photo
+                  {t('addPhoto')}
                 </span>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Glissez-déposez ou cliquez · JPEG, PNG, WebP · 5 Mo max
+                  {t('dragDropHint')}
                 </p>
               </div>
             </>

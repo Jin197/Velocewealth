@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import Script from 'next/script';
 import { getLocale } from 'next-intl/server';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/toaster';
+import { EthicalAnalytics } from '@/components/domain/ethical-analytics';
 import { isRtl } from '@/lib/i18n/routing';
 import './globals.css';
 
@@ -39,8 +41,24 @@ export const metadata: Metadata = {
   ),
   openGraph: {
     type: 'website',
-    title: 'Velocewealth',
-    description: 'Pilotez votre voiture comme un investissement',
+    title: 'Velocewealth — Pilotez votre voiture comme un investissement',
+    description:
+      'Suivi énergétique hybride, maintenance prédictive et carnet certifié. Transformez votre voiture en patrimoine maîtrisé.',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=1200&h=630&fit=crop&q=80',
+        width: 1200,
+        height: 630,
+        alt: 'Velocewealth — Gestion de Patrimoine Automobile',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Velocewealth — Pilotez votre voiture comme un investissement',
+    description:
+      'Suivi énergétique hybride, maintenance prédictive et carnet certifié. Transformez votre voiture en patrimoine maîtrisé.',
+    images: ['https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=1200&h=630&fit=crop&q=80'],
   },
 };
 
@@ -64,12 +82,20 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={direction} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrains.variable} font-sans`}>
+        {process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && (
+          <Script
+            defer
+            data-domain={process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.js"
+          />
+        )}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
+          <EthicalAnalytics />
           {children}
           <Toaster />
         </ThemeProvider>
@@ -77,3 +103,4 @@ export default async function RootLayout({
     </html>
   );
 }
+

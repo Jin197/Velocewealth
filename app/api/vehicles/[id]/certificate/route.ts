@@ -4,17 +4,29 @@ import { getVehicle } from '@/lib/data';
 import { createClient } from '@/lib/supabase/server';
 import { evaluateVehicleHealth, TelemetryData } from '@/lib/phm/engine';
 import { buildPhmComponents } from '@/lib/phm/components';
+import crypto from 'crypto';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: vehicleId } = await params;
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
+
     const vehicle = await getVehicle(vehicleId);
     
     if (!vehicle) {
-      return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 404 });
     }
 
-    const supabase = createClient();
+    if (vehicle.userId !== user.id) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+    }
 
     // 1. Fetch Latest Telemetry
     const { data: telemetryData } = await supabase
@@ -126,7 +138,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       font: helvetica,
       color: rgb(0.3, 0.3, 0.3)
     });
-    page.drawText(`ID Rapport: VW-${Math.random().toString(36).substr(2, 9).toUpperCase()}-${vehicleId.substr(0, 8).toUpperCase()}`, {
+    page.drawText(`ID Rapport: VW-${crypto.randomUUID().split('-')[0].toUpperCase()}-${vehicleId.substr(0, 8).toUpperCase()}`, {
       x: 60, y: 65,
       size: 9,
       font: helvetica,

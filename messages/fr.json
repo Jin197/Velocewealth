@@ -202,12 +202,27 @@
     "title": "Cookies essentiels uniquement",
     "description": "Velocewealth n'utilise que les cookies strictement nécessaires (session, préférences). Aucun cookie publicitaire, aucun traçage tiers.",
     "accept": "J'ai compris",
-    "manage": "Gérer"
+    "manage": "Gérer",
+    "acceptAll": "Tout accepter",
+    "refuseAll": "Refuser tout"
   },
   "legal": {
     "termsTitle": "Conditions générales d'utilisation",
     "privacyTitle": "Politique de confidentialité",
     "mentionsTitle": "Mentions légales",
     "lastUpdated": "Dernière mise à jour"
+  },
+  "photoUpload": {
+    "unsupportedFormat": "Format non supporté. Utilisez JPEG, PNG ou WebP.",
+    "fileTooHeavy": "Image trop lourde (max 5 Mo).",
+    "uploadError": "Erreur lors de l'upload.",
+    "uploadSuccess": "Photo enregistrée",
+    "changePhoto": "Changer la photo",
+    "delete": "Supprimer",
+    "uploading": "Upload en cours…",
+    "registered": "Enregistrée",
+    "dropHere": "Déposez ici",
+    "addPhoto": "Ajouter une photo",
+    "dragDropHint": "Glissez-déposez ou cliquez · JPEG, PNG, WebP · 5 Mo max"
   }
 }

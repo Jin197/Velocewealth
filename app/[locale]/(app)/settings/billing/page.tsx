@@ -12,37 +12,41 @@ export const dynamic = 'force-dynamic';
 export default async function BillingPage() {
   const profile = isSupabaseConfigured() ? await getProfile() : null;
   const isPremium = profile?.planTier === 'premium';
+  const isFamily = profile?.planTier === 'family';
+  const isSubscribed = isPremium || isFamily;
 
   return (
     <div className="space-y-6">
       <Card variant="premium" className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Badge variant="premium">
-              <Sparkles className="h-3 w-3" /> {isPremium ? 'Premium actif' : 'Standard'}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            <Badge variant={isFamily ? 'family' : isPremium ? 'premium' : 'default'}>
+              <Sparkles className="h-3 w-3" /> {isSubscribed ? `${isFamily ? 'Family/Pro' : 'Premium'} actif` : 'Standard'}
             </Badge>
             <div className="font-display text-2xl font-bold mt-3">
-              {isPremium ? 'Velocewealth Premium' : 'Velocewealth Standard'}
+              {isSubscribed ? `Velocewealth ${isFamily ? 'Family/Pro' : 'Premium'}` : 'Velocewealth Standard'}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {isPremium
+              {isSubscribed
                 ? 'Renouvellement automatique. Modifiez votre abonnement à tout moment.'
                 : 'Passez Premium pour OCR illimité, carnet certifié et export fiscal.'}
             </p>
             <div className="flex items-baseline gap-1 mt-4">
               <span className="font-mono text-3xl font-bold tabular-nums">
-                {isPremium ? '4,99' : '0'}
+                {isFamily ? '16,99' : isPremium ? '9,99' : '0'}
               </span>
               <span className="text-muted-foreground">€/mois</span>
             </div>
           </div>
-          {isPremium ? (
-            <ManageSubscriptionButton />
-          ) : (
-            <Button asChild>
-              <Link href="/pricing">Passer Premium</Link>
-            </Button>
-          )}
+          <div className="shrink-0 flex items-center">
+            {isSubscribed ? (
+              <ManageSubscriptionButton className="w-full sm:w-auto text-center justify-center font-semibold" />
+            ) : (
+              <Button asChild className="w-full sm:w-auto text-center justify-center">
+                <Link href="/pricing">Passer Premium</Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         <ul className="mt-6 grid sm:grid-cols-2 gap-2 text-sm">
@@ -65,9 +69,9 @@ export default async function BillingPage() {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-base font-semibold">Mode de paiement</h2>
-          {isPremium && <ManageSubscriptionButton variant="ghost" size="sm" label="Modifier" />}
+          {isSubscribed && <ManageSubscriptionButton variant="ghost" size="sm" label="Modifier" />}
         </div>
-        {isPremium ? (
+        {isSubscribed ? (
           <div className="flex items-center gap-3">
             <div className="rounded-btn bg-muted p-3">
               <CreditCard className="h-5 w-5" strokeWidth={1.5} />
@@ -88,9 +92,9 @@ export default async function BillingPage() {
           <h2 className="font-display text-base font-semibold">
             Historique de facturation
           </h2>
-          {isPremium && <ManageSubscriptionButton variant="ghost" size="sm" label={<><Receipt className="h-3.5 w-3.5" /> Voir</>} />}
+          {isSubscribed && <ManageSubscriptionButton variant="ghost" size="sm" label={<><Receipt className="h-3.5 w-3.5" /> Voir</>} />}
         </div>
-        {isPremium ? (
+        {isSubscribed ? (
           <div className="text-sm text-muted-foreground">
             Téléchargez vos factures depuis le portail Stripe.
           </div>

@@ -7,6 +7,7 @@ import { env } from '@/lib/env';
 
 const bodySchema = z.object({
   interval: z.enum(['monthly', 'yearly']).default('monthly'),
+  tier: z.enum(['premium', 'family']).default('premium'),
 });
 
 export async function POST(req: Request) {
@@ -19,9 +20,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    const { interval } = bodySchema.parse(await req.json());
-    const priceId =
-      interval === 'yearly' ? env.stripePriceYearly() : env.stripePriceMonthly();
+    const { interval, tier } = bodySchema.parse(await req.json());
+    let priceId: string;
+    if (tier === 'family') {
+      priceId =
+        interval === 'yearly'
+          ? env.stripePriceFamilyYearly()
+          : env.stripePriceFamilyMonthly();
+    } else {
+      priceId =
+        interval === 'yearly' ? env.stripePriceYearly() : env.stripePriceMonthly();
+    }
 
     // Look up profile for stripe_customer_id
     const { data: profile } = await supabase

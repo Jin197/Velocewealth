@@ -3,6 +3,17 @@
  * For production scale, swap for Upstash Redis (rest API works on Edge).
  */
 
+import { Redis } from '@upstash/redis';
+
+let redis: Redis | null = null;
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = Redis.fromEnv();
+  }
+} catch {
+  // Ignorer les erreurs d'initialisation de Redis en local
+}
+
 interface Entry {
   count: number;
   resetAt: number;
@@ -10,11 +21,35 @@ interface Entry {
 
 const store = new Map<string, Entry>();
 
-export function rateLimit(
+export async function rateLimit(
   key: string,
   limit: number,
   windowMs: number,
-): { ok: boolean; remaining: number; resetIn: number } {
+): Promise<{ ok: boolean; remaining: number; resetIn: number }> {
+  if (redis) {
+    try {
+      const redisKey = `ratelimit:${key}`;
+      const count = await redis.incr(redisKey);
+      
+      if (count === 1) {
+        await redis.pexpire(redisKey, windowMs);
+        return { ok: true, remaining: limit - 1, resetIn: windowMs };
+      }
+      
+      const ttl = await redis.pttl(redisKey);
+      const resetIn = ttl > 0 ? ttl : windowMs;
+      
+      if (count > limit) {
+        return { ok: false, remaining: 0, resetIn };
+      }
+      
+      return { ok: true, remaining: limit - count, resetIn };
+    } catch {
+      // Fallback silencieux vers le store en mémoire si Redis échoue
+    }
+  }
+
+  // Fallback en mémoire locale
   const now = Date.now();
   const entry = store.get(key);
   if (!entry || entry.resetAt < now) {

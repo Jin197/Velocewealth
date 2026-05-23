@@ -83,8 +83,8 @@ export function ChatbotWidget() {
                     <p className="text-xs text-muted-foreground">Expert Maintenance</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
-                  <X className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)} aria-label="Fermer le chat">
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </Button>
               </div>
 
@@ -139,8 +139,9 @@ export function ChatbotWidget() {
                     size="icon"
                     className="absolute right-1 w-8 h-8 rounded-full"
                     disabled={!input.trim() || isLoading}
+                    aria-label="Envoyer le message"
                   >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Send className="w-4 h-4" aria-hidden="true" />}
                   </Button>
                 </div>
               </form>
@@ -152,8 +153,9 @@ export function ChatbotWidget() {
           onClick={() => setIsOpen(!isOpen)}
           size="icon"
           className="w-14 h-14 rounded-full shadow-lg bg-veloce hover:bg-veloce/90 transition-transform hover:scale-105"
+          aria-label={isOpen ? "Fermer l'assistant virtuel" : "Ouvrir l'assistant virtuel VeloceWealth"}
         >
-          {isOpen ? <X className="w-6 h-6" /> : <MessageSquareText className="w-6 h-6" />}
+          {isOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <MessageSquareText className="w-6 h-6" aria-hidden="true" />}
         </Button>
       </div>
     </>

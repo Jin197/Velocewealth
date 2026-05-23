@@ -6,6 +6,14 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 Mo
 const BUCKET = 'vehicle-photos';
 
 export async function POST(request: Request) {
+  const contentLength = Number(request.headers.get('content-length') || '0');
+  if (contentLength > MAX_SIZE * 1.1) {
+    return NextResponse.json(
+      { error: 'Fichier trop lourd (max 5 Mo)' },
+      { status: 413 }
+    );
+  }
+
   const supabase = createClient();
   const {
     data: { user },

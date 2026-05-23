@@ -40,7 +40,7 @@ export default async function CertifiedLogPage() {
     );
   }
 
-  const isPremium = profile?.planTier === 'premium';
+  const isPremium = profile?.planTier === 'premium' || profile?.planTier === 'family';
 
   return (
     <div className="container py-6 lg:py-8 max-w-4xl space-y-6">

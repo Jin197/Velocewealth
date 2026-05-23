@@ -18,7 +18,7 @@ export type Database = {
           locale: 'fr' | 'en' | 'es' | 'ar' | 'pt';
           currency: string;
           country: string;
-          plan_tier: 'free' | 'premium';
+          plan_tier: 'free' | 'premium' | 'family';
           stripe_customer_id: string | null;
           ocr_credits_used: number;
           created_at: string;
@@ -32,7 +32,7 @@ export type Database = {
           locale?: 'fr' | 'en' | 'es' | 'ar' | 'pt';
           currency?: string;
           country?: string;
-          plan_tier?: 'free' | 'premium';
+          plan_tier?: 'free' | 'premium' | 'family';
           stripe_customer_id?: string | null;
           ocr_credits_used?: number;
         };
@@ -267,7 +267,7 @@ export type Database = {
           id: string;
           user_id: string;
           stripe_subscription_id: string;
-          tier: 'premium';
+          tier: 'premium' | 'family';
           status: string;
           current_period_end: string;
           cancel_at_period_end: boolean;
@@ -278,7 +278,7 @@ export type Database = {
           id?: string;
           user_id: string;
           stripe_subscription_id: string;
-          tier?: 'premium';
+          tier?: 'premium' | 'family';
           status: string;
           current_period_end: string;
           cancel_at_period_end?: boolean;

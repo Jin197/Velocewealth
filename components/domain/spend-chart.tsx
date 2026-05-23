@@ -11,11 +11,13 @@ import {
 } from 'recharts';
 
 interface SpendChartProps {
-  data: { label: string; total: number; energy: number; maint: number }[];
+  data: { label: string; total: number; energy: number; maint: number; insurance?: number }[];
   currency?: string;
 }
 
 export function SpendChart({ data, currency = 'EUR' }: SpendChartProps) {
+  const hasInsurance = data.some((d) => d.insurance !== undefined && d.insurance > 0);
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -28,6 +30,10 @@ export function SpendChart({ data, currency = 'EUR' }: SpendChartProps) {
             <linearGradient id="maint" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2ECC71" stopOpacity={0.6} />
               <stop offset="100%" stopColor="#2ECC71" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="insurance" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#C5A059" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="#C5A059" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
@@ -56,6 +62,17 @@ export function SpendChart({ data, currency = 'EUR' }: SpendChartProps) {
             }}
             formatter={(value: number) => `${value.toFixed(2)} ${currency}`}
           />
+          {hasInsurance && (
+            <Area
+              type="monotone"
+              dataKey="insurance"
+              stackId="1"
+              stroke="#C5A059"
+              fill="url(#insurance)"
+              strokeWidth={2}
+              name="Assurance"
+            />
+          )}
           <Area
             type="monotone"
             dataKey="energy"

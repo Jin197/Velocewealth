@@ -121,6 +121,11 @@ export function Sidebar() {
                   Premium
                 </Badge>
               )}
+              {currentUser.planTier === 'family' && (
+                <Badge variant="family" className="text-[10px] px-1.5 py-0">
+                  Family/Pro
+                </Badge>
+              )}
               <span className="text-xs text-muted-foreground truncate">
                 {currentUser.email}
               </span>

@@ -14,7 +14,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -28,6 +29,13 @@ if (!URL || !ANON || !SVC || !A_EMAIL || !A_PASS || !B_EMAIL || !B_PASS) {
   console.error('Missing env vars. See file header for setup.');
   process.exit(2);
 }
+
+const admin = createClient(URL, SVC, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 const log = {
   pass: (msg) => console.log(`\x1b[32m✓\x1b[0m ${msg}`),
@@ -44,12 +52,13 @@ async function signIn(email, password) {
   return c;
 }
 
-async function ensureUserAHasVehicle(a) {
+async function ensureUserAHasVehicle(a, userId) {
   const { data: existing } = await a.from('vehicles').select('id').limit(1);
   if (existing && existing.length > 0) return existing[0].id;
   const { data, error } = await a
     .from('vehicles')
     .insert({
+      user_id: userId,
       make: 'Audit',
       model: 'A',
       year: 2024,
@@ -92,7 +101,8 @@ async function expectError(label, promise) {
 async function run() {
   log.info('Signing in user A...');
   const a = await signIn(A_EMAIL, A_PASS);
-  const vehicleA = await ensureUserAHasVehicle(a);
+  const { data: { user: userA } } = await a.auth.getUser();
+  const vehicleA = await ensureUserAHasVehicle(a, userA.id);
   log.info(`User A vehicle: ${vehicleA}`);
 
   log.info('Signing in user B...');
@@ -112,14 +122,14 @@ async function run() {
     b.from('maintenance_entries').select('*').eq('vehicle_id', vehicleA),
   );
 
-  // ===== Cross-user writes should error =====
-  await expectError(
+  // ===== Cross-user writes should error or have no effect (RLS) =====
+  await expectDeny(
     'B cannot UPDATE A vehicle',
-    b.from('vehicles').update({ make: 'Hacked' }).eq('id', vehicleA),
+    b.from('vehicles').update({ make: 'Hacked' }).eq('id', vehicleA).select(),
   );
-  await expectError(
+  await expectDeny(
     'B cannot DELETE A vehicle',
-    b.from('vehicles').delete().eq('id', vehicleA),
+    b.from('vehicles').delete().eq('id', vehicleA).select(),
   );
 
   // ===== Maintenance immutability triggers =====
@@ -128,6 +138,7 @@ async function run() {
     .from('maintenance_entries')
     .insert({
       vehicle_id: vehicleA,
+      user_id: userA.id,
       occurred_at: new Date().toISOString(),
       category: 'oil',
       description: 'Audit row',
@@ -144,13 +155,24 @@ async function run() {
     log.fail(`Could not insert maintenance: ${mErr.message}`);
     failures++;
   } else {
+    // 1. User client: blocked silently by lack of UPDATE/DELETE RLS policies (filtered to empty)
+    await expectDeny(
+      'A cannot UPDATE own maintenance (RLS blocks)',
+      a.from('maintenance_entries').update({ cost: 999 }).eq('id', mInsert.id).select(),
+    );
+    await expectDeny(
+      'A cannot DELETE own maintenance (RLS blocks)',
+      a.from('maintenance_entries').delete().eq('id', mInsert.id).select(),
+    );
+
+    // 2. Admin client (service_role): bypasses RLS, but blocked explicitly by database triggers
     await expectError(
-      'A cannot UPDATE own maintenance (trigger blocks)',
-      a.from('maintenance_entries').update({ cost: 999 }).eq('id', mInsert.id),
+      'service_role cannot UPDATE maintenance (trigger blocks)',
+      admin.from('maintenance_entries').update({ cost: 999 }).eq('id', mInsert.id),
     );
     await expectError(
-      'A cannot DELETE own maintenance (trigger blocks)',
-      a.from('maintenance_entries').delete().eq('id', mInsert.id),
+      'service_role cannot DELETE maintenance (trigger blocks)',
+      admin.from('maintenance_entries').delete().eq('id', mInsert.id),
     );
   }
 

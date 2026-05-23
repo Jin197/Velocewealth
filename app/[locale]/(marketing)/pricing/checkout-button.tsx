@@ -9,10 +9,11 @@ import type { ButtonProps } from '@/components/ui/button';
 
 interface Props extends Omit<ButtonProps, 'onClick'> {
   interval: 'monthly' | 'yearly';
+  tier?: 'premium' | 'family';
   label: string;
 }
 
-export function CheckoutButton({ interval, label, ...rest }: Props) {
+export function CheckoutButton({ interval, tier = 'premium', label, ...rest }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -22,11 +23,11 @@ export function CheckoutButton({ interval, label, ...rest }: Props) {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interval }),
+        body: JSON.stringify({ interval, tier }),
       });
       const data = await res.json();
       if (res.status === 401) {
-        router.push('/signup?next=/pricing');
+        router.push(`/signup?next=/pricing`);
         return;
       }
       if (!res.ok) throw new Error(data.error ?? 'Erreur');

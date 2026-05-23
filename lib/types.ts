@@ -116,5 +116,5 @@ export interface UserProfile {
   locale: Locale;
   currency: Currency;
   country: string;
-  planTier: 'free' | 'premium';
+  planTier: 'free' | 'premium' | 'family';
 }

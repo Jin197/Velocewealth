@@ -109,6 +109,17 @@ describe('computeCostPerKm', () => {
     const res = computeCostPerKm(baseVehicle, fuel, [], 6);
     expect(res.energy).toBe(0);
   });
+
+  it('calibrates insurance amortization precisely for a recently purchased vehicle', () => {
+    const recentVehicle: Vehicle = {
+      ...baseVehicle,
+      purchaseDate: daysAgo(60), // Purchased 2 months ago
+    };
+    const res = computeCostPerKm(recentVehicle, [], [], 12);
+    // Should only count 2 months of insurance instead of 12!
+    // 50 * 2 = 100
+    expect(res.insurance).toBe(100);
+  });
 });
 
 describe('energyMix', () => {
@@ -172,6 +183,40 @@ describe('energyMix', () => {
     expect(mix.thermal).toBe(0);
     expect(mix.electric).toBe(0);
   });
+
+  it('aggregates physical energy volumes correctly', () => {
+    const fuel: FuelEntry[] = [
+      {
+        id: '1',
+        vehicleId: 'v1',
+        occurredAt: daysAgo(2),
+        energyType: 'gasoline',
+        quantity: 45,
+        unit: 'L',
+        unitPrice: 2,
+        totalPrice: 90,
+        currency: 'EUR',
+        stationName: 'X',
+        mileageKm: 0,
+      },
+      {
+        id: '2',
+        vehicleId: 'v1',
+        occurredAt: daysAgo(1),
+        energyType: 'electric',
+        quantity: 30,
+        unit: 'kWh',
+        unitPrice: 0.5,
+        totalPrice: 15,
+        currency: 'EUR',
+        stationName: 'Y',
+        mileageKm: 0,
+      },
+    ];
+    const mix = energyMix(fuel);
+    expect(mix.thermalVolume).toBe(45);
+    expect(mix.electricVolume).toBe(30);
+  });
 });
 
 describe('tireWearPercent', () => {
@@ -215,5 +260,16 @@ describe('monthlySpend', () => {
     const last = months[months.length - 1];
     expect(last.energy).toBe(72);
     expect(last.total).toBe(72);
+  });
+
+  it('includes monthly insurance in total spend for lissage', () => {
+    const vehicles: Vehicle[] = [
+      { ...baseVehicle, insuranceMonthly: 50 },
+    ];
+    const months = monthlySpend([], [], 6, vehicles);
+    months.forEach((m) => {
+      expect(m.insurance).toBe(50);
+      expect(m.total).toBe(50);
+    });
   });
 });

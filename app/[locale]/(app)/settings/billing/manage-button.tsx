@@ -9,12 +9,14 @@ interface Props {
   variant?: 'primary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   label?: React.ReactNode;
+  className?: string;
 }
 
 export function ManageSubscriptionButton({
   variant = 'outline',
   size = 'md',
   label,
+  className,
 }: Props) {
   const [pending, setPending] = useState(false);
 
@@ -37,6 +39,7 @@ export function ManageSubscriptionButton({
       size={size}
       onClick={handleClick}
       disabled={pending}
+      className={className}
     >
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
       {label ?? (

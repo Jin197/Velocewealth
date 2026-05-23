@@ -19,6 +19,7 @@ import { SpendChart } from '@/components/domain/spend-chart';
 import { EnergyMix } from '@/components/domain/energy-mix';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DemoButton } from '@/components/domain/demo-button';
 import { getDashboardData, getStations, getGarages } from '@/lib/data';
 import {
   computeCostPerKm,
@@ -50,7 +51,7 @@ export default async function DashboardPage() {
   const totalDistance = breakdowns.reduce((s, b) => s + b.distance, 0);
   const fleetCostPerKm = totalDistance > 0 ? totalSpend / totalDistance : 0;
   const mix = energyMix(fuel);
-  const monthly = monthlySpend(fuel, maintenance, 6);
+  const monthly = monthlySpend(fuel, maintenance, 6, vehicles);
   const recentFuel = fuel.slice(0, 4);
   const criticalAlerts = alerts.filter(
     (a) => a.severity === 'critical' || a.severity === 'warning',
@@ -106,10 +107,15 @@ export default async function DashboardPage() {
                 Dépenses mensuelles
               </h2>
               <p className="text-xs text-muted-foreground">
-                Énergie + entretien sur 6 mois
+                Énergie + entretien + assurance sur 6 mois
               </p>
             </div>
             <div className="flex gap-3 text-xs">
+              {vehicles.some((v) => v.insuranceMonthly && v.insuranceMonthly > 0) && (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-[#C5A059]" /> Assurance
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-veloce" /> Énergie
               </span>
@@ -130,7 +136,12 @@ export default async function DashboardPage() {
               Part électrique vs thermique
             </p>
           </div>
-          <EnergyMix thermal={mix.thermal} electric={mix.electric} />
+          <EnergyMix
+            thermal={mix.thermal}
+            electric={mix.electric}
+            thermalVolume={mix.thermalVolume}
+            electricVolume={mix.electricVolume}
+          />
           {mix.thermalAmount > 0 && (
             <div className="mt-6 rounded-btn bg-eco/5 border border-eco/10 p-3">
               <div className="text-xs text-eco font-medium">
@@ -255,11 +266,14 @@ function EmptyState({ name }: { name?: string }) {
           Pour commencer, ajoutez votre premier véhicule. Velocewealth calculera
           automatiquement votre coût au kilomètre dès la première dépense.
         </p>
-        <Button asChild size="lg" className="mt-6">
-          <Link href="/vehicles/new">
-            <Plus className="h-4 w-4" /> Ajouter mon premier véhicule
-          </Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/vehicles/new">
+              <Plus className="h-4 w-4" /> Ajouter mon premier véhicule
+            </Link>
+          </Button>
+          <DemoButton />
+        </div>
       </Card>
     </div>
   );

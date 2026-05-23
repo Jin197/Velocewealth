@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { lookupVehicle, detectInputType, isValidFrenchPlate } from '@/lib/vehicle-lookup/router';
+import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * API Route: Vehicle Lookup — Routeur Intelligent International
@@ -12,46 +14,72 @@ import { lookupVehicle, detectInputType, isValidFrenchPlate } from '@/lib/vehicl
  * Cascade : Cache Redis → SIV/DVLA → NHTSA → Erreur gracieuse
  */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const plate = searchParams.get('plate')?.toUpperCase().replace(/\s/g, '') || '';
-  const vin = searchParams.get('vin')?.toUpperCase().replace(/\s/g, '') || '';
-  const q = searchParams.get('q')?.toUpperCase().replace(/\s/g, '') || '';
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  // Déterminer l'input principal
-  const input = vin || plate || q;
+    if (!user) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    }
 
-  if (!input || input.length < 4) {
+    // ── Rate-limiting (5 requêtes par minute) ──────────────────────
+    const rl = await rateLimit(`vlookup:${user.id}`, 5, 60_000);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes. Veuillez patienter une minute.' },
+        { status: 429 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const plate = searchParams.get('plate')?.toUpperCase().replace(/\s/g, '') || '';
+    const vin = searchParams.get('vin')?.toUpperCase().replace(/\s/g, '') || '';
+    const q = searchParams.get('q')?.toUpperCase().replace(/\s/g, '') || '';
+
+    // Déterminer l'input principal
+    const input = vin || plate || q;
+
+    if (!input || input.length < 4) {
+      return NextResponse.json(
+        { error: "Plaque d'immatriculation ou VIN requis (min 4 caractères)." },
+        { status: 400 }
+      );
+    }
+
+    // ── Validation anti-abus côté serveur ──────────────────────────
+    // Si c'est clairement une plaque FR, valider le format avant d'appeler l'API payante
+    const inputType = detectInputType(input);
+    if (inputType === 'plate-fr' && !isValidFrenchPlate(input)) {
+      return NextResponse.json(
+        { error: 'Format de plaque française invalide. Attendu : AA-123-AA.' },
+        { status: 422 }
+      );
+    }
+
+    // ── Routage intelligent ────────────────────────────────────────
+    const response = await lookupVehicle(input);
+
+    if (!response.success) {
+      // Erreur avec suggestion de fallback pour le frontend
+      const status = response.fallback === 'try-vin' ? 404 : 422;
+      return NextResponse.json(
+        {
+          error: response.error,
+          fallback: response.fallback,
+          inputType: response.inputType,
+        },
+        { status }
+      );
+    }
+
+    return NextResponse.json(response.data);
+  } catch (error) {
+    console.error('Lookup API Error:', error);
     return NextResponse.json(
-      { error: "Plaque d'immatriculation ou VIN requis (min 4 caractères)." },
-      { status: 400 }
+      { error: 'Internal Server Error' },
+      { status: 500 }
     );
   }
-
-  // ── Validation anti-abus côté serveur ──────────────────────────
-  // Si c'est clairement une plaque FR, valider le format avant d'appeler l'API payante
-  const inputType = detectInputType(input);
-  if (inputType === 'plate-fr' && !isValidFrenchPlate(input)) {
-    return NextResponse.json(
-      { error: 'Format de plaque française invalide. Attendu : AA-123-AA.' },
-      { status: 422 }
-    );
-  }
-
-  // ── Routage intelligent ────────────────────────────────────────
-  const response = await lookupVehicle(input);
-
-  if (!response.success) {
-    // Erreur avec suggestion de fallback pour le frontend
-    const status = response.fallback === 'try-vin' ? 404 : 422;
-    return NextResponse.json(
-      {
-        error: response.error,
-        fallback: response.fallback,
-        inputType: response.inputType,
-      },
-      { status }
-    );
-  }
-
-  return NextResponse.json(response.data);
 }

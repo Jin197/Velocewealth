@@ -132,7 +132,7 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
     locale: row.locale as Locale,
     currency: row.currency as Currency,
     country: row.country as string,
-    planTier: row.plan_tier as 'free' | 'premium',
+    planTier: row.plan_tier as 'free' | 'premium' | 'family',
   };
 }
 

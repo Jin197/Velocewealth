@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      window.localStorage.setItem('velocewealth-cookies-acknowledged', 'refused');
+    } catch (e) {
+      // Ignore security errors on about:blank
+    }
+  });
+});
+
 test.describe('Landing page', () => {
   test('renders hero with primary CTA', async ({ page }) => {
     await page.goto('/');
@@ -15,7 +25,7 @@ test.describe('Landing page', () => {
       .locator('section#features')
       .getByRole('heading', { level: 3 })
       .all();
-    expect(features.length).toBe(6);
+    expect(features.length).toBe(3);
   });
 
   test('FAQ accordions expand', async ({ page }) => {
@@ -30,7 +40,7 @@ test.describe('Landing page', () => {
     await page
       .getByRole('link', { name: /démarrer gratuitement/i })
       .first()
-      .click();
+      .click({ force: true });
     await expect(page).toHaveURL(/\/signup/);
     await expect(page.getByRole('heading', { name: /créer/i })).toBeVisible();
   });

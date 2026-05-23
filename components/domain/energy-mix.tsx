@@ -5,9 +5,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 interface EnergyMixProps {
   thermal: number;
   electric: number;
+  thermalVolume?: number;
+  electricVolume?: number;
 }
 
-export function EnergyMix({ thermal, electric }: EnergyMixProps) {
+export function EnergyMix({ thermal, electric, thermalVolume = 0, electricVolume = 0 }: EnergyMixProps) {
   const data = [
     { name: 'Thermique', value: Math.round(thermal * 100), color: '#F59E0B' },
     { name: 'Électrique', value: Math.round(electric * 100), color: '#2ECC71' },
@@ -48,12 +50,22 @@ export function EnergyMix({ thermal, electric }: EnergyMixProps) {
           <div className="text-[10px] text-eco">élec.</div>
         </div>
       </div>
-      <ul className="space-y-1.5 text-sm">
+      <ul className="space-y-1.5 text-sm flex-1">
         {data.map((d) => (
-          <li key={d.name} className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
-            <span className="text-muted-foreground">{d.name}</span>
-            <span className="font-mono tabular-nums ml-auto pl-3">{d.value}%</span>
+          <li key={d.name} className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
+              <span className="text-muted-foreground">{d.name}</span>
+            </div>
+            <div className="font-mono tabular-nums text-right flex items-center gap-1.5">
+              <span className="font-semibold">{d.value}%</span>
+              {d.name === 'Thermique' && thermalVolume > 0 && (
+                <span className="text-[10px] text-muted-foreground">({thermalVolume.toFixed(0)} L)</span>
+              )}
+              {d.name === 'Électrique' && electricVolume > 0 && (
+                <span className="text-[10px] text-muted-foreground">({electricVolume.toFixed(0)} kWh)</span>
+              )}
+            </div>
           </li>
         ))}
       </ul>
