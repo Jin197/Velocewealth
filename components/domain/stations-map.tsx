@@ -207,26 +207,39 @@ export function StationsMap({
     );
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
-    map.on('load', () => {
-      pins.forEach((pin) => {
-        const popup = new mapboxgl.Popup({
-          offset: 24,
-          closeButton: false,
-          className: 'velo-map-popup',
-        }).setHTML(buildPopupHtml(pin));
+    // Add markers synchronously to prevent any "load" event race conditions
+    pins.forEach((pin) => {
+      const popup = new mapboxgl.Popup({
+        offset: 24,
+        closeButton: false,
+        className: 'velo-map-popup',
+      }).setHTML(buildPopupHtml(pin));
 
-        new mapboxgl.Marker({ element: createPinElement(pin.kind) })
-          .setLngLat([pin.data.lng, pin.data.lat])
-          .setPopup(popup)
-          .addTo(map);
-      });
-
-      if (pins.length > 0 && !initialCenter) {
-        const bounds = new mapboxgl.LngLatBounds();
-        pins.forEach((p) => bounds.extend([p.data.lng, p.data.lat]));
-        map.fitBounds(bounds, { padding: 60, maxZoom: 11, duration: 0 });
-      }
+      new mapboxgl.Marker({ element: createPinElement(pin.kind) })
+        .setLngLat([pin.data.lng, pin.data.lat])
+        .setPopup(popup)
+        .addTo(map);
     });
+
+    // Fit bounds safely
+    if (pins.length > 0 && !initialCenter) {
+      const bounds = new mapboxgl.LngLatBounds();
+      pins.forEach((p) => bounds.extend([p.data.lng, p.data.lat]));
+      
+      const fit = () => {
+        try {
+          map.fitBounds(bounds, { padding: 60, maxZoom: 11, duration: 0 });
+        } catch (e) {
+          console.warn('[Mapbox fitBounds failed]', e);
+        }
+      };
+
+      if (map.isStyleLoaded()) {
+        fit();
+      } else {
+        map.once('load', fit);
+      }
+    }
 
     map.on('error', (e) => {
       console.warn('[Mapbox]', e?.error?.message ?? e);
