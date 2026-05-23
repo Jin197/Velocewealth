@@ -22,6 +22,7 @@ Sa mission est double :
 3. Saisissez votre Nom Complet, Email et Mot de passe. Choisissez votre **Pays** et votre **Devise**.
 4. **Période d'Essai Inversée (Reverse Trial 14j sans CB)** : À la création de votre compte, vous bénéficiez **automatiquement de 14 jours d'accès complet et gratuit à toutes les fonctionnalités Premium** (scan OCR illimité, Chat IA, etc.) sans entrer de coordonnées bancaires.
 5. Un compteur dynamique dans votre barre latérale indique le nombre de jours restants. Si vous approchez de la fin de la période (J-2 ou moins), un bandeau d'alerte orange visible en haut de l'écran vous guidera pour activer votre abonnement Stripe définitif sans interruption.
+6. **Réinitialisation en cas d'oubli** : Si vous perdez votre mot de passe, cliquez sur **"Mot de passe oublié ?"** sur la page de connexion. Renseignez votre email pour recevoir un lien de réinitialisation sécurisé par email. En cliquant sur le lien reçu, vous serez automatiquement connecté et redirigé vers l'écran premium dédié `/reset-password` pour enregistrer un nouveau mot de passe robuste et accéder instantanément à votre tableau de bord.
 
 
 ### Étape 2 : Enregistrement d'un véhicule (Plaque-Driven ou Mode Démo)
@@ -57,12 +58,12 @@ Sa mission est double :
 3. Les verrous de sécurité **RLS** PostgreSQL et les triggers serveurs interdisent toute modification ou suppression ultérieure de l'historique d'entretien (impossibilité de frauder sur le kilométrage ou de masquer un sinistre).
 4. Lors de la revente, téléchargez en un clic l'**Export Certifié PDF** avec filigrane officiel et signature cryptographique à présenter à l'acheteur ou à votre assureur.
 
-### Étape 6 : Télémétrie, Maintenance Prédictive (PHM) & Carte de Proximité Universelle
+### Étape 6 : Télémétrie, Maintenance Prédictive (PHM) & Itinéraires de Proximité
 1. Si votre véhicule est lié par télémétrie ou OBD, le module **PHM** (*Prognostics and Health Management*) surveille l'usure mécanique en temps réel.
 2. Il utilise des modèles de survie industrielle de **Weibull** pour évaluer la Durée de Vie Utile Restante (*RUL*) des composants critiques (Freins, Pneus, Fluides, Batterie).
 3. Un code couleur clair (Vert = Excellent, Orange = Usure modérée, Rouge = Remplacement imminant) vous indique l'état d'usure calculé.
-4. En cas de besoin d'entretien ou d'usure prononcée, rendez-vous dans le module **Carte intelligente**. L'application utilise votre **localisation précise** pour charger en temps réel l'ensemble des **garages, réparateurs, stations-service et bornes de recharge à proximité immédiate** directly via Mapbox vector tiles (POI extraction).
-5. Pas besoin de partenariats : vous visualisez de manière neutre tous les professionnels de l'automobile autour de vous et pouvez générer en un clic un **itinéraire de guidage précis sur Google Maps** pour vous y rendre instantanément.
+4. En cas de besoin d'entretien ou d'usure prononcée, vous pouvez générer en un clic des **itinéraires de guidage précis vers les professionnels de l'automobile à proximité immédiate** (garages, réparateurs, stations-service et bornes de recharge) directement redirigés vers Google Maps.
+5. Pas besoin de partenariats : vous visualisez de manière neutre et transparente tous les professionnels autour de vous et êtes guidé instantanément.
 
 
 ---
