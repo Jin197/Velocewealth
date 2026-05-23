@@ -2,6 +2,7 @@
 
 import { Link } from '@/lib/i18n/routing';
 import { useState, useTransition, useRef, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Mail, Lock, Apple, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -54,13 +55,74 @@ const MFA_LOGIN_LABELS = {
   },
 } as const;
 
+// User-facing messages for the `?error=...` query param coming from
+// /auth/callback (OAuth flow failures, code replay, expired state…).
+const OAUTH_ERROR_LABELS: Record<
+  string,
+  Partial<Record<keyof typeof MFA_LOGIN_LABELS, string>>
+> = {
+  oauth_replay: {
+    fr: 'Lien de connexion déjà utilisé. Réessaie en cliquant à nouveau sur le bouton Google ou Apple.',
+    en: 'Login link already used. Click Google or Apple again to retry.',
+    es: 'Enlace de inicio de sesión ya utilizado. Vuelve a hacer clic en Google o Apple.',
+    ar: 'تم استخدام رابط تسجيل الدخول بالفعل. انقر مرة أخرى على زر Google أو Apple.',
+    pt: 'Link de início de sessão já utilizado. Clica em Google ou Apple novamente.',
+  },
+  oauth_expired: {
+    fr: 'La connexion a expiré. Réessaie.',
+    en: 'Login session expired. Please retry.',
+    es: 'La sesión de inicio expiró. Inténtalo de nuevo.',
+    ar: 'انتهت صلاحية الجلسة. حاول مرة أخرى.',
+    pt: 'A sessão de início expirou. Tenta novamente.',
+  },
+  oauth_failed: {
+    fr: 'Connexion via fournisseur impossible. Réessaie.',
+    en: 'Provider sign-in failed. Please retry.',
+    es: 'Inicio de sesión con proveedor fallido. Inténtalo de nuevo.',
+    ar: 'فشل تسجيل الدخول. حاول مرة أخرى.',
+    pt: 'Falha no início de sessão. Tenta novamente.',
+  },
+  oauth_exchange: {
+    fr: 'Échec de l\'échange de code. Reconnecte-toi.',
+    en: 'Code exchange failed. Please sign in again.',
+    es: 'Error de intercambio de código. Vuelve a iniciar sesión.',
+    ar: 'فشل تبادل الرمز. سجّل الدخول مرة أخرى.',
+    pt: 'Falha na troca de código. Inicia sessão novamente.',
+  },
+  auth: {
+    fr: 'Authentification impossible.',
+    en: 'Authentication failed.',
+    es: 'Autenticación fallida.',
+    ar: 'فشل المصادقة.',
+    pt: 'Falha de autenticação.',
+  },
+};
+
 export default function LoginPage() {
   const t = useTranslations('auth');
   const rawLocale = useLocale();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const mfaLabels =
     MFA_LOGIN_LABELS[rawLocale as keyof typeof MFA_LOGIN_LABELS] ?? MFA_LOGIN_LABELS.fr;
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
+
+  // Surface OAuth-callback errors (?error=oauth_replay etc.) as a toast,
+  // then strip the query string so a hard refresh doesn't re-trigger it.
+  useEffect(() => {
+    const oauthError = searchParams.get('error');
+    if (!oauthError) return;
+    const localeKey = rawLocale as keyof typeof MFA_LOGIN_LABELS;
+    const msg =
+      OAUTH_ERROR_LABELS[oauthError]?.[localeKey] ??
+      OAUTH_ERROR_LABELS[oauthError]?.fr ??
+      OAUTH_ERROR_LABELS.auth.fr!;
+    toast.error(msg);
+    // Clean URL without re-rendering the route stack.
+    router.replace(window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState('');
   const [email, setEmail] = useState('');

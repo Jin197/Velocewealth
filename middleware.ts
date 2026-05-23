@@ -33,6 +33,22 @@ export async function middleware(request: NextRequest) {
   const stripped = stripLocale(path);
   const firstSeg = stripped.split('/')[0] ?? '';
 
+  // ── OAuth stray-payload safety net ────────────────────────────────────
+  // If Supabase redirects an OAuth response (?code=... or ?error=...) to
+  // anywhere other than /auth/callback (typically because the Redirect URL
+  // isn't allow-listed in the dashboard), forward the payload to the right
+  // handler so the user sees a sensible result instead of a blank page.
+  const searchParams = request.nextUrl.searchParams;
+  const hasOAuthPayload =
+    (searchParams.has('code') || searchParams.has('error')) &&
+    !path.startsWith('/auth/callback') &&
+    !path.startsWith('/api/');
+  if (hasOAuthPayload) {
+    const target = new URL('/auth/callback', request.url);
+    target.search = request.nextUrl.search;
+    return NextResponse.redirect(target);
+  }
+
   // Auth-aware routes get Supabase session refresh + redirect logic
   const isProtected = PROTECTED_PREFIXES.includes(firstSeg);
   const isAuthOnly = AUTH_ONLY_PATHS.includes(firstSeg);

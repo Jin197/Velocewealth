@@ -5,7 +5,23 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const oauthError = url.searchParams.get('error');
+  const oauthErrorCode = url.searchParams.get('error_code');
   const next = url.searchParams.get('next') ?? '/dashboard';
+
+  // ── Provider returned an explicit error (user cancelled, expired flow_state, …).
+  // Forward a short, stable error key to /login so the UI can show a clear toast.
+  if (oauthError) {
+    const errKey =
+      oauthErrorCode === 'flow_state_already_used'
+        ? 'oauth_replay'
+        : oauthErrorCode === 'flow_state_expired'
+          ? 'oauth_expired'
+          : 'oauth_failed';
+    return NextResponse.redirect(
+      new URL(`/login?error=${errKey}`, request.url),
+    );
+  }
 
   if (code) {
     const supabase = createClient();
@@ -34,6 +50,11 @@ export async function GET(request: Request) {
       }
       return NextResponse.redirect(new URL(next, request.url));
     }
+    // Exchange itself failed (expired code, already consumed, signature mismatch).
+    return NextResponse.redirect(
+      new URL('/login?error=oauth_exchange', request.url),
+    );
   }
+
   return NextResponse.redirect(new URL('/login?error=auth', request.url));
 }
