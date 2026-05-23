@@ -25,7 +25,7 @@ export async function GET() {
   if (!profile) {
     return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 });
   }
-  if (profile.planTier !== 'premium' && profile.planTier !== 'family') {
+  if (profile.planTier !== 'premium' && profile.planTier !== 'family' && !profile.isTrial) {
     return NextResponse.json(
       { error: 'Export PDF réservé aux abonnés Premium et Family/Pro' },
       { status: 402 },

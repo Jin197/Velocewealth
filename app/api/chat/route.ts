@@ -42,9 +42,9 @@ export async function POST(req: Request) {
 
     const createdAt = profile.created_at ? new Date(profile.created_at) : new Date();
     const isTrial = profile.plan_tier === 'free' && (Date.now() - createdAt.getTime()) < 14 * 24 * 60 * 60 * 1000;
-    const planTier = isTrial ? 'premium' : profile.plan_tier;
+    const isPremium = profile.plan_tier === 'premium' || profile.plan_tier === 'family' || isTrial;
 
-    if (planTier === 'free') {
+    if (!isPremium) {
       return NextResponse.json(
         { error: 'Le module Chat Assistant est réservé aux membres Premium.' },
         { status: 403 }

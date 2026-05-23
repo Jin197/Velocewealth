@@ -48,7 +48,7 @@ export default async function ScanPage({
       defaultVehicleId={searchParams.vehicle ?? vehicles[0].id}
       defaultCurrency={profile?.currency ?? 'EUR'}
       isManual={searchParams.manual === '1'}
-      isPremium={profile?.planTier === 'premium' || profile?.planTier === 'family'}
+      isPremium={profile?.planTier === 'premium' || profile?.planTier === 'family' || !!profile?.isTrial}
     />
   );
 }

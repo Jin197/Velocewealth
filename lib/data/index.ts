@@ -123,11 +123,17 @@ function mapGarage(row: Record<string, unknown>): Garage {
   };
 }
 
+export function isTrialActive(createdAt: string | Date | undefined, planTier: string): boolean {
+  if (planTier !== 'free' || !createdAt) return false;
+  const date = typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
+  const elapsedMs = Date.now() - date.getTime();
+  return elapsedMs >= 0 && elapsedMs < 14 * 24 * 60 * 60 * 1000;
+}
+
 function mapProfile(row: Record<string, unknown>): UserProfile {
   const planTier = row.plan_tier as 'free' | 'premium' | 'family';
   const createdAtStr = row.created_at as string;
-  const createdAt = createdAtStr ? new Date(createdAtStr) : new Date();
-  const isTrial = planTier === 'free' && (Date.now() - createdAt.getTime()) < 14 * 24 * 60 * 60 * 1000;
+  const isTrial = isTrialActive(createdAtStr, planTier);
 
   return {
     id: row.id as string,
@@ -137,7 +143,7 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
     locale: row.locale as Locale,
     currency: row.currency as Currency,
     country: row.country as string,
-    planTier: isTrial ? 'premium' : planTier,
+    planTier: planTier,
     createdAt: createdAtStr,
     isTrial,
   };

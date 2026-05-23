@@ -71,7 +71,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 space-y-2">
-        {currentUser.planTier === 'free' && (
+        {currentUser.planTier === 'free' && !currentUser.isTrial && (
           <Link
             href="/settings/billing"
             className="block glass-premium rounded-card p-4 text-sm hover:scale-[1.02] transition-transform"
@@ -79,6 +79,28 @@ export function Sidebar() {
             <div className="flex items-center gap-2 font-medium mb-1">
               <Sparkles className="h-4 w-4 text-veloce" strokeWidth={1.5} />
               Premium
+            </div>
+          </Link>
+        )}
+
+        {currentUser.isTrial && (
+          <Link
+            href="/settings/billing"
+            className="block glass-premium rounded-card p-4 text-sm hover:scale-[1.02] transition-transform border border-amber-500/20 bg-amber-500/5"
+          >
+            <div className="flex items-center gap-2 font-medium mb-1 text-amber-400">
+              <Sparkles className="h-4 w-4" strokeWidth={1.5} />
+              Essai Premium
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-1">
+              {(() => {
+                let trialDaysLeft = 14;
+                if (currentUser.createdAt) {
+                  const elapsedMs = Date.now() - new Date(currentUser.createdAt).getTime();
+                  trialDaysLeft = Math.max(0, Math.ceil((14 * 24 * 60 * 60 * 1000 - elapsedMs) / (24 * 60 * 60 * 1000)));
+                }
+                return `${trialDaysLeft} jour${trialDaysLeft > 1 ? 's' : ''} restant${trialDaysLeft > 1 ? 's' : ''}`;
+              })()}
             </div>
           </Link>
         )}
@@ -116,9 +138,9 @@ export function Sidebar() {
               {currentUser.fullName}
             </div>
             <div className="flex items-center gap-1.5">
-              {currentUser.planTier === 'premium' && (
-                <Badge variant="premium" className="text-[10px] px-1.5 py-0">
-                  Premium
+              {(currentUser.planTier === 'premium' || currentUser.isTrial) && (
+                <Badge variant="premium" className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-amber-500 to-amber-600 border-none text-white">
+                  {currentUser.isTrial ? 'Essai' : 'Premium'}
                 </Badge>
               )}
               {currentUser.planTier === 'family' && (
