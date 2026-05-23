@@ -6,15 +6,64 @@ import { getProfile } from '@/lib/data';
 import { isSupabaseConfigured } from '@/lib/env';
 import { cn } from '@/lib/utils';
 import { Link } from '@/lib/i18n/routing';
+import { getLocale, setRequestLocale } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
+const TRANSLATIONS = {
+  fr: {
+    attention: "Attention",
+    daysRemainingUrgent: (days: number) => `Plus que ${days} jour${days > 1 ? 's' : ''} d'essai Premium gratuit. Activez votre plan pour conserver vos accès illimités.`,
+    trialOfferText: (days: number) => `Vous profitez d'un essai Premium gratuit (${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}).`,
+    viewOffers: "Découvrir les offres",
+    preProd: "Mode pré-prod",
+    envMissing: "Variables d'environnement Supabase manquantes — voir ONBOARDING.md pour brancher le backend."
+  },
+  en: {
+    attention: "Attention",
+    daysRemainingUrgent: (days: number) => `Only ${days} day${days > 1 ? 's' : ''} left of free Premium trial. Activate your plan to retain unlimited access.`,
+    trialOfferText: (days: number) => `You are enjoying a free Premium trial (${days} day${days > 1 ? 's' : ''} remaining).`,
+    viewOffers: "View offers",
+    preProd: "Pre-prod mode",
+    envMissing: "Supabase environment variables missing — see ONBOARDING.md to connect the backend."
+  },
+  es: {
+    attention: "Atención",
+    daysRemainingUrgent: (days: number) => `Solo quedan ${days} día${days > 1 ? 's' : ''} de prueba Premium gratuita. Activa tu plan para conservar tu acceso ilimitado.`,
+    trialOfferText: (days: number) => `Estás disfrutando de una prueba Premium gratuita (quedan ${days} día${days > 1 ? 's' : ''}).`,
+    viewOffers: "Ver ofertas",
+    preProd: "Modo pre-prod",
+    envMissing: "Faltan las variables de entorno de Supabase — ver ONBOARDING.md para conectar el backend."
+  },
+  ar: {
+    attention: "تنبيه",
+    daysRemainingUrgent: (days: number) => `متبقي ${days} يوم فقط من التجربة البريميوم المجانية. نشط خطتك للاحتفاظ بالوصول الكامل.`,
+    trialOfferText: (days: number) => `أنت تستمتع بفترة تجربة بريميوم مجانية (متبقي ${days} يوم).`,
+    viewOffers: "عرض العروض",
+    preProd: "وضع التطوير",
+    envMissing: "متغيرات بيئة Supabase مفقودة — راجع ONBOARDING.md لتوصيل قاعدة البيانات."
+  },
+  pt: {
+    attention: "Atenção",
+    daysRemainingUrgent: (days: number) => `Resta apenas ${days} dia${days > 1 ? 's' : ''} de teste Premium gratuito. Ative seu plano para manter o acesso ilimitado.`,
+    trialOfferText: (days: number) => `Você está desfrutando de um teste Premium gratuito (restam ${days} dia${days > 1 ? 's' : ''}).`,
+    viewOffers: "Ver ofertas",
+    preProd: "Modo pré-prod",
+    envMissing: "Variáveis de ambiente do Supabase ausentes — consulte ONBOARDING.md para conectar o backend."
+  }
+};
+
 export default async function AppLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params?: Promise<{ locale: string }> | any;
 }) {
   const profile = isSupabaseConfigured() ? await getProfile() : null;
+  const locale = await getLocale();
+  setRequestLocale(locale);
+  const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.fr;
 
   return (
     <UserProvider user={profile}>
@@ -22,8 +71,8 @@ export default async function AppLayout({
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
-          <TrialWarningBanner profile={profile} />
-          {!isSupabaseConfigured() && <BackendNotConfiguredBanner />}
+          <TrialWarningBanner profile={profile} t={t} />
+          {!isSupabaseConfigured() && <BackendNotConfiguredBanner t={t} />}
           <main className="flex-1 pb-24 lg:pb-8 overflow-x-hidden">{children}</main>
         </div>
         <MobileNav />
@@ -32,7 +81,7 @@ export default async function AppLayout({
   );
 }
 
-function TrialWarningBanner({ profile }: { profile: any }) {
+function TrialWarningBanner({ profile, t }: { profile: any; t: any }) {
   if (!profile?.isTrial || !profile?.createdAt) return null;
   const elapsedMs = Date.now() - new Date(profile.createdAt).getTime();
   const trialDaysLeft = Math.max(0, Math.ceil((14 * 24 * 60 * 60 * 1000 - elapsedMs) / (24 * 60 * 60 * 1000)));
@@ -54,11 +103,11 @@ function TrialWarningBanner({ profile }: { profile: any }) {
           <span>
             {isUrgent ? (
               <>
-                <strong>Attention :</strong> Plus que <span className="font-semibold text-white">{trialDaysLeft} jour{trialDaysLeft > 1 ? 's' : ''}</span> d&apos;essai Premium gratuit. Activez votre plan pour conserver vos accès illimités.
+                <strong>{t.attention} :</strong> {t.daysRemainingUrgent(trialDaysLeft)}
               </>
             ) : (
               <>
-                Vous profitez d&apos;un essai Premium gratuit (<span className="font-semibold text-foreground">{trialDaysLeft} jour{trialDaysLeft > 1 ? 's' : ''} restant{trialDaysLeft > 1 ? 's' : ''}</span>).
+                {t.trialOfferText(trialDaysLeft)}
               </>
             )}
           </span>
@@ -72,22 +121,20 @@ function TrialWarningBanner({ profile }: { profile: any }) {
               : "border-border hover:bg-muted text-foreground"
           )}
         >
-          Découvrir les offres
+          {t.viewOffers}
         </Link>
       </div>
     </div>
   );
 }
 
-function BackendNotConfiguredBanner() {
+function BackendNotConfiguredBanner({ t }: { t: any }) {
   return (
     <div className="border-b border-amber-500/20 bg-amber-500/10">
       <div className="container py-3 text-sm text-amber-200">
-        <strong className="font-medium">Mode pré-prod</strong>
+        <strong className="font-medium">{t.preProd}</strong>
         <span className="ml-2 text-muted-foreground">
-          Variables d'environnement Supabase manquantes — voir{' '}
-          <code className="font-mono text-xs">ONBOARDING.md</code> pour brancher
-          le backend.
+          {t.envMissing}
         </span>
       </div>
     </div>

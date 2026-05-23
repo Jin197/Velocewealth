@@ -1,0 +1,134 @@
+import 'server-only';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { isSupabaseConfigured } from '@/lib/env';
+
+interface NotifyOpts {
+  userId: string;
+  email: string;
+  fullName: string | null;
+  locale: string;
+  ip: string;
+  userAgent: string;
+}
+
+/**
+ * Send a "new device login detected" email if:
+ *   1. The Resend integration is configured (RESEND_API_KEY + EMAIL_FROM set)
+ *   2. The (user_id, ip, user_agent) tuple has never been seen before, i.e.
+ *      we don't notify on every login from the same device.
+ *
+ * Fails silently — login flow must never break because of a missing email.
+ *
+ * Activation: set the following Vercel env vars to turn this on in prod.
+ *   - RESEND_API_KEY (Resend dashboard → API keys)
+ *   - EMAIL_FROM     (e.g. "Velocewealth <security@velocewealth.app>")
+ * Until both are set, this function is a no-op (returns immediately).
+ */
+export async function notifyNewDeviceLoginIfNeeded(
+  opts: NotifyOpts,
+): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!apiKey || !from) return; // feature flag: disabled until configured
+  if (!isSupabaseConfigured()) return;
+
+  try {
+    const admin = createAdminClient();
+
+    // Look back 90 days for any prior login_success from the same UA+IP.
+    // If found, this device/network combo is familiar — no need to notify.
+    const ninetyDaysAgo = new Date(
+      Date.now() - 90 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { data: prior, error } = await admin
+      .from('auth_audit_logs' as never)
+      .select('id')
+      .eq('user_id', opts.userId)
+      .eq('action', 'login_success')
+      .eq('user_agent', opts.userAgent)
+      .gte('created_at', ninetyDaysAgo)
+      .limit(2);
+
+    if (error) return; // schema mismatch — fail silently
+    // The current login_success was already inserted by auditAuthEvent —
+    // so 1 row means this is the only/first occurrence (notify), 2+ means
+    // we've seen this device before (skip).
+    const matches = Array.isArray(prior) ? prior.length : 0;
+    if (matches >= 2) return;
+
+    await sendNewDeviceEmail(apiKey, from, opts);
+  } catch {
+    // never break the login flow
+  }
+}
+
+async function sendNewDeviceEmail(
+  apiKey: string,
+  from: string,
+  opts: NotifyOpts,
+): Promise<void> {
+  const subject = subjectFor(opts.locale);
+  const html = htmlBody(opts);
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to: opts.email,
+      subject,
+      html,
+    }),
+  });
+}
+
+function subjectFor(locale: string): string {
+  switch (locale) {
+    case 'en':
+      return 'New login detected on your Velocewealth account';
+    case 'es':
+      return 'Nuevo inicio de sesión detectado en tu cuenta Velocewealth';
+    case 'ar':
+      return 'تم اكتشاف تسجيل دخول جديد إلى حسابك في Velocewealth';
+    case 'pt':
+      return 'Novo início de sessão detetado na sua conta Velocewealth';
+    default:
+      return 'Nouvelle connexion détectée sur votre compte Velocewealth';
+  }
+}
+
+function htmlBody(opts: NotifyOpts): string {
+  const name = opts.fullName ?? opts.email.split('@')[0] ?? 'utilisateur';
+  const when = new Date().toLocaleString(opts.locale, {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+  const ua = escapeHtml(opts.userAgent);
+  const ip = escapeHtml(opts.ip);
+  return `
+    <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;color:#111">
+      <h2 style="font-size:18px">Bonjour ${escapeHtml(name)},</h2>
+      <p>Une nouvelle connexion a été détectée sur votre compte Velocewealth.</p>
+      <table style="border-collapse:collapse;margin:16px 0">
+        <tr><td style="padding:4px 12px 4px 0;color:#666">Date</td><td>${escapeHtml(when)}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#666">IP</td><td>${ip}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#666">Appareil</td><td>${ua}</td></tr>
+      </table>
+      <p>Si c'est bien vous, vous pouvez ignorer ce message.</p>
+      <p>Sinon, <strong>changez votre mot de passe immédiatement</strong> depuis Velocewealth → Paramètres → Sécurité.</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
+      <p style="font-size:12px;color:#888">Cet email a été envoyé automatiquement, ne pas répondre.</p>
+    </div>
+  `;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}

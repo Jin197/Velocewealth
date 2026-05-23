@@ -1,26 +1,139 @@
 'use client';
 
 import { Link } from '@/lib/i18n/routing';
-import { useState, useTransition } from 'react';
-import { useTranslations } from 'next-intl';
-import { Mail, Lock, Apple, Loader2 } from 'lucide-react';
+import { useState, useTransition, useRef, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Mail, Lock, Apple, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { FormError } from '@/components/ui/form-error';
-import { loginAction, signInWithProvider } from '@/server/actions/auth';
+import {
+  loginAction,
+  signInWithProvider,
+  mfaLoginChallengeAction,
+} from '@/server/actions/auth';
+import { captchaStatusAction } from '@/server/actions/captcha';
+
+const MFA_LOGIN_LABELS = {
+  fr: {
+    title: 'Code de vérification',
+    subtitle: 'Saisissez le code à 6 chiffres affiché par votre app authenticator.',
+    placeholder: 'Code à 6 chiffres',
+    submit: 'Vérifier',
+    back: 'Retour',
+  },
+  en: {
+    title: 'Verification code',
+    subtitle: 'Enter the 6-digit code shown by your authenticator app.',
+    placeholder: '6-digit code',
+    submit: 'Verify',
+    back: 'Back',
+  },
+  es: {
+    title: 'Código de verificación',
+    subtitle: 'Introduce el código de 6 dígitos que muestra tu app autenticadora.',
+    placeholder: 'Código de 6 dígitos',
+    submit: 'Verificar',
+    back: 'Volver',
+  },
+  ar: {
+    title: 'رمز التحقق',
+    subtitle: 'أدخل الرمز المكوّن من 6 أرقام المعروض في تطبيق المصادقة.',
+    placeholder: 'الرمز المكوّن من 6 أرقام',
+    submit: 'تحقق',
+    back: 'رجوع',
+  },
+  pt: {
+    title: 'Código de verificação',
+    subtitle: 'Introduza o código de 6 dígitos apresentado pela sua app autenticadora.',
+    placeholder: 'Código de 6 dígitos',
+    submit: 'Verificar',
+    back: 'Voltar',
+  },
+} as const;
 
 export default function LoginPage() {
   const t = useTranslations('auth');
+  const rawLocale = useLocale();
+  const mfaLabels =
+    MFA_LOGIN_LABELS[rawLocale as keyof typeof MFA_LOGIN_LABELS] ?? MFA_LOGIN_LABELS.fr;
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [email, setEmail] = useState('');
+  // hCaptcha state — siteKey is provided by the server only after enough
+  // failures accumulate. Until then the widget is not rendered at all.
+  const [captchaSiteKey, setCaptchaSiteKey] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
+
+  // Poll the server on every email change (debounced) to detect when the
+  // captcha threshold is crossed. Cheap call (Redis GET, no DB).
+  useEffect(() => {
+    if (!email) {
+      setCaptchaSiteKey(null);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      const status = await captchaStatusAction(email);
+      setCaptchaSiteKey(status.required ? status.siteKey ?? null : null);
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [email]);
 
   const handleLogin = (formData: FormData) => {
     startTransition(async () => {
       setError(undefined);
+
+      // If captcha is required, execute the invisible widget first to get a
+      // fresh token, then inject it into the form payload.
+      if (captchaSiteKey && captchaRef.current) {
+        try {
+          const result = await captchaRef.current.execute({ async: true });
+          if (result?.response) {
+            formData.set('hcaptcha_token', result.response);
+          }
+        } catch {
+          setError('Vérification de sécurité requise');
+          return;
+        }
+      }
+
       const res = await loginAction(formData);
+      if (res?.mfaRequired) {
+        setMfaFactorId(res.mfaRequired.factorId);
+        return;
+      }
+      if (res?.error) {
+        setError(res.error);
+        // After a failure, re-check captcha state — the threshold may have
+        // just been crossed by this very attempt.
+        if (email) {
+          const status = await captchaStatusAction(email);
+          setCaptchaSiteKey(status.required ? status.siteKey ?? null : null);
+        }
+        // Reset captcha so the next attempt gets a fresh token.
+        captchaRef.current?.resetCaptcha();
+      }
+    });
+  };
+
+  const handleMfaSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaFactorId) return;
+    startTransition(async () => {
+      setError(undefined);
+      const res = await mfaLoginChallengeAction(mfaFactorId, mfaCode);
       if (res?.error) setError(res.error);
     });
+  };
+
+  const cancelMfa = () => {
+    setMfaFactorId(null);
+    setMfaCode('');
+    setError(undefined);
   };
 
   const handleOAuth = (provider: 'google' | 'apple') => {
@@ -33,6 +146,70 @@ export default function LoginPage() {
       if (res.url) window.location.href = res.url;
     });
   };
+
+  // ── MFA challenge view: shown right after a successful password step
+  // when the account has TOTP enabled. Replaces the password form until
+  // the code is verified (server completes the redirect).
+  if (mfaFactorId) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start gap-3">
+          <div className="rounded-btn bg-veloce/10 text-veloce p-2.5 shrink-0">
+            <ShieldCheck className="h-5 w-5" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display text-xl font-bold tracking-tight">
+              {mfaLabels.title}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {mfaLabels.subtitle}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleMfaSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="mfa-code">{mfaLabels.placeholder}</Label>
+            <Input
+              id="mfa-code"
+              value={mfaCode}
+              onChange={(e) =>
+                setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+              }
+              placeholder="123456"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              className="font-mono text-base tracking-widest text-center"
+              required
+              autoFocus
+              disabled={pending}
+            />
+          </div>
+          <FormError message={error} />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={cancelMfa}
+              disabled={pending}
+            >
+              {mfaLabels.back}
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1"
+              size="lg"
+              disabled={pending || mfaCode.length !== 6}
+            >
+              {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {mfaLabels.submit}
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -93,6 +270,8 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder={t('emailPlaceholder')}
               className="ps-9"
               required
@@ -121,6 +300,17 @@ export default function LoginPage() {
           </div>
         </div>
         <FormError message={error} />
+
+        {/* Invisible hCaptcha widget — only mounted after the server signals
+            that the failure threshold has been crossed for this email/IP. */}
+        {captchaSiteKey && (
+          <HCaptcha
+            ref={captchaRef}
+            sitekey={captchaSiteKey}
+            size="invisible"
+          />
+        )}
+
         <Button type="submit" className="w-full" size="lg" disabled={pending}>
           {pending && <Loader2 className="h-4 w-4 animate-spin" />}
           {t('loginButton')}

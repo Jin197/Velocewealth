@@ -57,7 +57,7 @@ export function Topbar({ title }: { title?: string }) {
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-eco" />
         </Button>
         <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Centre d'aide" asChild>
-          <Link href="/help">
+          <Link href="/help-center">
             <CircleHelp className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </Button>

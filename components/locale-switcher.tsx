@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { Globe, Check } from 'lucide-react';
 import { useRouter, usePathname } from '@/lib/i18n/routing';
 import { locales, localeLabels, localeFlags, type Locale } from '@/lib/i18n/routing';
+import { updateLocaleAction } from '@/server/actions/profile';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -19,9 +20,15 @@ export function LocaleSwitcher({ variant = 'compact' }: Props) {
 
   const handleChange = (next: Locale) => {
     if (next === current) return;
-    startTransition(() => {
-      // Replace keeps history clean; navigates to the same path under new locale
+    startTransition(async () => {
+      // 1. Persist the choice: cookie (NEXT_LOCALE) + DB profile if authenticated.
+      //    This ensures the language survives page reloads, new sessions, and
+      //    other devices for logged-in users.
+      await updateLocaleAction(next);
+      // 2. Navigate to the same path under the new locale prefix.
       router.replace(pathname, { locale: next });
+      // 3. Refresh server components so the new messages render immediately.
+      router.refresh();
     });
   };
 

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import { Link, usePathname } from '@/lib/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   LayoutDashboard,
   Car,
@@ -16,13 +17,53 @@ import { logoutAction } from '@/server/actions/auth';
 import { Logo } from './logo';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Confirm } from '@/components/ui/confirm';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/components/user-context';
+
+const SIDEBAR_TRANSLATIONS = {
+  fr: {
+    trialPremium: "Essai Premium",
+    daysRemaining: (days: number) => `${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}`,
+    trialBadge: "Essai",
+  },
+  en: {
+    trialPremium: "Premium Trial",
+    daysRemaining: (days: number) => `${days} day${days > 1 ? 's' : ''} remaining`,
+    trialBadge: "Trial",
+  },
+  es: {
+    trialPremium: "Prueba Premium",
+    daysRemaining: (days: number) => `${days} día${days > 1 ? 's' : ''} restante${days > 1 ? 's' : ''}`,
+    trialBadge: "Prueba",
+  },
+  ar: {
+    trialPremium: "تجربة بريميوم",
+    daysRemaining: (days: number) => `متبقي ${days} يوم`,
+    trialBadge: "تجربة",
+  },
+  pt: {
+    trialPremium: "Teste Premium",
+    daysRemaining: (days: number) => `${days} dia${days > 1 ? 's' : ''} restante${days > 1 ? 's' : ''}`,
+    trialBadge: "Teste",
+  },
+};
 
 export function Sidebar() {
   const pathname = usePathname();
   const currentUser = useUser();
   const t = useTranslations('nav');
+  const locale = useLocale();
+  const tSidebar = SIDEBAR_TRANSLATIONS[locale as keyof typeof SIDEBAR_TRANSLATIONS] || SIDEBAR_TRANSLATIONS.fr;
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, startLogout] = useTransition();
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
+    startLogout(async () => {
+      await logoutAction();
+    });
+  };
 
   const nav = [
     { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
@@ -88,7 +129,7 @@ export function Sidebar() {
           >
             <div className="flex items-center gap-2 font-medium mb-1 text-amber-400">
               <Sparkles className="h-4 w-4" strokeWidth={1.5} />
-              Essai Premium
+              {tSidebar.trialPremium}
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">
               {(() => {
@@ -97,7 +138,7 @@ export function Sidebar() {
                   const elapsedMs = Date.now() - new Date(currentUser.createdAt).getTime();
                   trialDaysLeft = Math.max(0, Math.ceil((14 * 24 * 60 * 60 * 1000 - elapsedMs) / (24 * 60 * 60 * 1000)));
                 }
-                return `${trialDaysLeft} jour${trialDaysLeft > 1 ? 's' : ''} restant${trialDaysLeft > 1 ? 's' : ''}`;
+                return tSidebar.daysRemaining(trialDaysLeft);
               })()}
             </div>
           </Link>
@@ -116,15 +157,15 @@ export function Sidebar() {
           {t('settings')}
         </Link>
 
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <LogOut className="h-4.5 w-4.5" strokeWidth={1.5} size={18} />
-            {t('logout')}
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => setShowLogoutConfirm(true)}
+          disabled={loggingOut}
+          className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          <LogOut className="h-4.5 w-4.5" strokeWidth={1.5} size={18} />
+          {t('logout')}
+        </button>
 
         <Link
           href="/settings/profile"
@@ -138,7 +179,7 @@ export function Sidebar() {
             <div className="flex items-center gap-1.5">
               {(currentUser.planTier === 'premium' || currentUser.isTrial) && (
                 <Badge variant="premium" className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-amber-500 to-amber-600 border-none text-white">
-                  {currentUser.isTrial ? 'Essai' : 'Premium'}
+                  {currentUser.isTrial ? tSidebar.trialBadge : 'Premium'}
                 </Badge>
               )}
               {currentUser.planTier === 'family' && (
@@ -153,6 +194,16 @@ export function Sidebar() {
           </div>
         </Link>
       </div>
+
+      <Confirm
+        open={showLogoutConfirm}
+        title={t('logoutConfirmTitle')}
+        description={t('logoutConfirmDesc')}
+        confirmLabel={t('logout')}
+        cancelLabel={t('logoutCancel')}
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </aside>
   );
 }

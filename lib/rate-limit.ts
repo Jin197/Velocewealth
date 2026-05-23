@@ -62,3 +62,28 @@ export async function rateLimit(
   entry.count++;
   return { ok: true, remaining: limit - entry.count, resetIn: entry.resetAt - now };
 }
+
+/**
+ * Read the current count for a rate-limit key WITHOUT incrementing it.
+ * Used to drive UX gates like "show a captcha after the 3rd failure" — we
+ * need to know the bucket size before deciding whether to challenge the
+ * user, but we mustn't bump the counter just by asking.
+ *
+ * Returns 0 when the key doesn't exist or Redis is unavailable.
+ */
+export async function peekRateLimitCount(key: string): Promise<number> {
+  if (redis) {
+    try {
+      const value = await redis.get<number | string>(`ratelimit:${key}`);
+      if (value === null || value === undefined) return 0;
+      const n = typeof value === 'number' ? value : parseInt(value, 10);
+      return Number.isFinite(n) ? n : 0;
+    } catch {
+      // fall through to in-memory
+    }
+  }
+  const now = Date.now();
+  const entry = store.get(key);
+  if (!entry || entry.resetAt < now) return 0;
+  return entry.count;
+}
