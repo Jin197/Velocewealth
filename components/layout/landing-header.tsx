@@ -56,7 +56,7 @@ export function LandingHeader({ tNav }: LandingHeaderProps) {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#007AFF] transition-all duration-300 group-hover:w-full" />
           </Link>
           <Link
-            href="/#partners"
+            href="/help"
             className="text-muted-foreground transition-colors hover:text-[#007AFF] relative group py-1"
           >
             {tNav.partners}
