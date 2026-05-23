@@ -34,6 +34,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function LandingPageClient({ locale }: { locale: string }) {
+  const tCommon = useTranslations('common');
   const t = useTranslations('landing.hero');
   const tFeatures = useTranslations('landing.features');
   const tHow = useTranslations('landing.howItWorks');
@@ -172,30 +173,17 @@ export function LandingPageClient({ locale }: { locale: string }) {
             </Badge>
             
             <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.98] text-white">
-              {locale === 'fr' ? (
-                <>
-                  Transformez vos charges<br />
-                  <span className="font-serif italic font-normal text-gradient-veloce bg-gradient-to-r from-[#007AFF] via-cyan-400 to-indigo-400">
-                    en Actifs.
-                  </span>
-                </>
-              ) : (
-                <>
-                  {t('titleLead')}<br />
-                  <span className="font-serif italic font-normal text-gradient-veloce bg-gradient-to-r from-[#007AFF] via-cyan-400 to-indigo-400">
-                    {t('titleHighlight')}
-                  </span>
-                </>
-              )}
+              {t('titleLead')}<br />
+              <span className="font-serif italic font-normal text-gradient-veloce bg-gradient-to-r from-[#007AFF] via-cyan-400 to-indigo-400">
+                {t('titleHighlight')}
+              </span>
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-xl font-sans leading-relaxed">
               <span className="text-[#007AFF] font-semibold block mb-1.5 tracking-wide uppercase text-sm font-mono">
-                {locale === 'fr' 
-                  ? '⚡ Pilotez votre voiture comme un investissement.' 
-                  : '⚡ Drive your car like a financial asset.'}
+                ⚡ {tCommon('tagline')}.
               </span>
-              VeloceWealth est l\'instrument financier haut de gamme conçu pour optimiser, certifier et maximiser la valeur de votre capital roulant.
+              {t('subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -205,7 +193,7 @@ export function LandingPageClient({ locale }: { locale: string }) {
                 className="relative bg-white hover:bg-white text-black font-semibold text-base py-4 px-8 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-shadow duration-300 overflow-hidden group w-full sm:w-auto"
               >
                 <Link href="/signup" className="flex items-center justify-center gap-2">
-                  Optimiser mon Patrimoine
+                  {t('ctaPrimary')}
                   <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
                 {/* Gloss highlight effect */}
@@ -218,7 +206,7 @@ export function LandingPageClient({ locale }: { locale: string }) {
                 className="relative bg-transparent hover:bg-white/5 text-[#F5F5F7] border border-white/10 font-semibold text-base py-4 px-8 rounded-full transition-colors duration-300 w-full sm:w-auto"
               >
                 <Link href="/dashboard" className="flex items-center justify-center">
-                  Consulter le TCO Demo
+                  {t('ctaSecondary')}
                 </Link>
               </button>
             </div>
@@ -228,7 +216,7 @@ export function LandingPageClient({ locale }: { locale: string }) {
               <div className="h-3 w-px bg-white/10" />
               <div>ASSETS: €120M+</div>
               <div className="h-3 w-px bg-white/10" />
-              <div>TRIAL: 30 JOURS SANS FRAIS</div>
+              <div className="uppercase">TRIAL: {t('trial')}</div>
             </div>
           </div>
 
@@ -262,7 +250,7 @@ export function LandingPageClient({ locale }: { locale: string }) {
 
               {/* Live monetary metric */}
               <div className="relative z-10 py-6 space-y-2">
-                <span className="text-xs text-muted-foreground font-mono uppercase">Indicateur TCO Courant</span>
+                <span className="text-xs text-muted-foreground font-mono uppercase">{t('demoTitle')}</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-bold font-mono tracking-tight text-white tabular-nums">0,184</span>
                   <span className="text-lg font-mono text-muted-foreground">€ / KM</span>
@@ -271,11 +259,15 @@ export function LandingPageClient({ locale }: { locale: string }) {
 
               <div className="relative z-10 grid grid-cols-2 gap-4 pb-6">
                 <div className="p-4 bg-black/40 backdrop-blur-md border border-white/[0.06] rounded-2xl space-y-1">
-                  <span className="text-xs text-muted-foreground font-mono">Mix Électrique</span>
-                  <div className="text-lg font-bold text-white font-mono">78% <span className="text-xs font-normal text-emerald-400">⚡ Coût bas</span></div>
+                  <span className="text-xs text-muted-foreground font-mono">{t('demoEnergy')}</span>
+                  <div className="text-lg font-bold text-white font-mono">
+                    78% <span className="text-xs font-normal text-emerald-400">{locale === 'fr' ? '⚡ Coût bas' : locale === 'es' ? '⚡ Bajo coste' : '⚡ Low cost'}</span>
+                  </div>
                 </div>
                 <div className="p-4 bg-black/40 backdrop-blur-md border border-white/[0.06] rounded-2xl space-y-1">
-                  <span className="text-xs text-muted-foreground font-mono">Kilométrage total</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {locale === 'fr' ? 'Kilométrage total' : locale === 'es' ? 'Kilometraje total' : 'Total mileage'}
+                  </span>
                   <div className="text-lg font-bold text-white font-mono tabular-nums">{tcoDistance.toLocaleString(locale)} km</div>
                 </div>
               </div>
@@ -284,8 +276,10 @@ export function LandingPageClient({ locale }: { locale: string }) {
                 <div className="flex items-center gap-3">
                   <Leaf className="h-5 w-5 text-emerald-400" />
                   <div>
-                    <div className="text-xs font-bold text-emerald-400">Score de Durabilité</div>
-                    <div className="text-[10px] text-muted-foreground font-mono">Empreinte CO2 optimale</div>
+                    <div className="text-xs font-bold text-emerald-400">
+                      {locale === 'fr' ? 'Score de Durabilité' : locale === 'es' ? 'Puntuación Eco' : 'Eco Score'}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-mono">{t('demoEcoDelta')}</div>
                   </div>
                 </div>
                 <span className="text-lg font-bold text-emerald-400 font-mono">A+</span>
@@ -300,14 +294,22 @@ export function LandingPageClient({ locale }: { locale: string }) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(0,122,255,0.05),transparent_40%)]" />
         <div className="container relative z-10 max-w-4xl text-center px-6">
           <Badge className="bg-[#2D2D2D]/60 text-[#C5A059] border border-[#C5A059]/20 rounded-full px-4 py-1 text-xs font-mono mb-8 uppercase tracking-widest">
-            Le Manifeste de Valeur
+            {locale === 'fr' ? 'Le Manifeste de Valeur' : locale === 'es' ? 'El Manifiesto de Valor' : 'The Value Manifesto'}
           </Badge>
           <div className="space-y-6 text-2xl sm:text-4xl md:text-5xl font-display font-light leading-snug tracking-tight [text-wrap:balance]">
             <div className="manifesto-line text-muted-foreground">
-              La plupart des conducteurs subissent : <span className="text-white font-medium font-serif italic">la dépréciation</span> de leur véhicule.
+              {locale === 'fr' ? 'La plupart des conducteurs subissent : ' : locale === 'es' ? 'La mayoría de los conductores sufren: ' : 'Most drivers suffer: '}
+              <span className="text-white font-medium font-serif italic">
+                {locale === 'fr' ? 'la dépréciation' : locale === 'es' ? 'la depreciación' : 'the depreciation'}
+              </span>
+              {locale === 'fr' ? ' de leur véhicule.' : locale === 'es' ? ' de su vehículo.' : ' of their vehicle.'}
             </div>
             <div className="manifesto-line text-[#C5A059] font-medium pt-4">
-              Nous nous concentrons sur : <span className="text-[#007AFF] font-bold">la valorisation</span> de votre capital roulant.
+              {locale === 'fr' ? 'Nous nous concentrons sur : ' : locale === 'es' ? 'Nos enfocamos en: ' : 'We focus on: '}
+              <span className="text-[#007AFF] font-bold">
+                {locale === 'fr' ? 'la valorisation' : locale === 'es' ? 'la valorización' : 'maximizing the value'}
+              </span>
+              {locale === 'fr' ? ' de votre capital roulant.' : locale === 'es' ? ' de su capital rodante.' : ' of your driving capital.'}
             </div>
           </div>
         </div>
@@ -316,14 +318,14 @@ export function LandingPageClient({ locale }: { locale: string }) {
       {/* 3. FONCTIONNALITES — "Tableau de Bord Prédictif" */}
       <section id="features" className="container py-24 px-4 space-y-16">
         <div className="text-center max-w-2xl mx-auto space-y-4">
-          <Badge variant="outline" className="border-[#007AFF]/30 text-[#007AFF] font-mono px-3 py-0.5 rounded-full text-xs">
-            TECHNOLOGIES PROPRETAIRES
+          <Badge variant="outline" className="border-[#007AFF]/30 text-[#007AFF] font-mono px-3 py-0.5 rounded-full text-xs uppercase">
+            {locale === 'fr' ? 'TECHNOLOGIES PROPRIÉTAIRES' : locale === 'es' ? 'TECNOLOGÍAS PROPIETARIAS' : 'PROPRIETARY TECHNOLOGIES'}
           </Badge>
           <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white leading-none">
-            Tableau de Bord Prédictif
+            {tFeatures('title')}
           </h2>
           <p className="text-muted-foreground">
-            Des algorithmes industriels et des flux certifiés au service de la rentabilité de votre véhicule.
+            {tFeatures('subtitle')}
           </p>
         </div>
 
@@ -337,9 +339,9 @@ export function LandingPageClient({ locale }: { locale: string }) {
               <div className="h-12 w-12 rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/20 flex items-center justify-center text-[#007AFF]">
                 <ScanLine className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold text-white font-display">Le Flux OCR</h3>
+              <h3 className="text-2xl font-bold text-white font-display">{tFeatures('ocrTitle')}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Importez instantanément vos recharges et factures. Notre moteur extrait les valeurs fiscales et comptables clés sans aucune friction.
+                {tFeatures('ocrDescription')}
               </p>
 
               {/* Interactive cycling receipt scanner */}
@@ -350,15 +352,15 @@ export function LandingPageClient({ locale }: { locale: string }) {
                 </div>
                 <div className="space-y-2">
                   <div className={`flex justify-between items-center px-2 py-1.5 rounded transition-all duration-300 ${ocrStep === 0 ? 'bg-[#007AFF]/10 text-[#007AFF] border-l-2 border-[#007AFF]' : 'opacity-40'}`}>
-                    <span>1. ANALYSE DU REÇU...</span>
+                    <span>{locale === 'fr' ? '1. ANALYSE DU REÇU...' : locale === 'es' ? '1. ANALIZANDO TICKET...' : '1. ANALYZING RECEIPT...'}</span>
                     <span>TTC: 78.50 €</span>
                   </div>
                   <div className={`flex justify-between items-center px-2 py-1.5 rounded transition-all duration-300 ${ocrStep === 1 ? 'bg-[#007AFF]/10 text-[#007AFF] border-l-2 border-[#007AFF]' : 'opacity-40'}`}>
-                    <span>2. EXTRACTION DES TAXES...</span>
+                    <span>{locale === 'fr' ? '2. EXTRACTION DES TAXES...' : locale === 'es' ? '2. EXTRACCIÓN DE IMPUESTOS...' : '2. EXTRACTING TAXES...'}</span>
                     <span>TVA: 13.08 €</span>
                   </div>
                   <div className={`flex justify-between items-center px-2 py-1.5 rounded transition-all duration-300 ${ocrStep === 2 ? 'bg-[#007AFF]/10 text-[#007AFF] border-l-2 border-[#007AFF]' : 'opacity-40'}`}>
-                    <span>3. PROTOCOLE CERTIFIÉ</span>
+                    <span>{locale === 'fr' ? '3. PROTOCOLE CERTIFIÉ' : locale === 'es' ? '3. PROTOCOLO CERTIFICADO' : '3. CERTIFIED PROTOCOL'}</span>
                     <span className="text-emerald-400">SUCCESS</span>
                   </div>
                 </div>
@@ -372,33 +374,39 @@ export function LandingPageClient({ locale }: { locale: string }) {
               <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                 <Cpu className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold text-white font-display">TCO Direct</h3>
+              <h3 className="text-2xl font-bold text-white font-display">
+                {locale === 'fr' ? 'TCO Direct' : locale === 'es' ? 'TCO Directo' : 'Direct TCO'}
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Suivez en continu votre coût réel au kilomètre. Notre formule intègre en direct l'amortissement et les charges énergétiques fluctuantes.
+                {locale === 'fr' 
+                  ? "Suivez en continu votre coût réel au kilomètre. Notre formule intègre en direct l'amortissement et les charges énergétiques fluctuantes."
+                  : locale === 'es'
+                  ? "Realiza un seguimiento continuo de tu coste real por kilómetro. Nuestra fórmula integra la depreciación y los gastos de energía en tiempo real."
+                  : "Track your true cost per kilometer continuously. Our formula integrates depreciation and energy expenses in real time."}
               </p>
 
               {/* Monospace formula stream */}
               <div className="bg-[#2D2D2D]/30 border border-white/[0.04] rounded-2xl p-4 font-mono text-[11px] text-[#F5F5F7] space-y-3">
                 <div className="text-xs text-muted-foreground border-b border-white/[0.04] pb-2">TCO CALCULATOR ENGINE</div>
                 <div className="text-muted-foreground overflow-x-auto whitespace-nowrap">
-                  Coût/Km = (Énergie + Entretien + Assurance) / Distance
+                  {locale === 'fr' ? 'Coût/Km = (Énergie + Entretien + Assurance) / Distance' : locale === 'es' ? 'Coste/Km = (Energía + Mantenimiento + Seguro) / Distancia' : 'Cost/Km = (Energy + Maintenance + Insurance) / Distance'}
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Énergie (Mois) :</span>
+                    <span className="text-muted-foreground">{locale === 'fr' ? 'Énergie (Mois) :' : locale === 'es' ? 'Energía (Mes) :' : 'Energy (Month) :'}</span>
                     <span className="text-white font-bold">{tcoEnergy} €</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Assurance :</span>
+                    <span className="text-muted-foreground">{locale === 'fr' ? 'Assurance :' : locale === 'es' ? 'Seguro :' : 'Insurance :'}</span>
                     <span className="text-white">78 €</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Distance :</span>
+                    <span className="text-muted-foreground">{locale === 'fr' ? 'Distance :' : locale === 'es' ? 'Distancia :' : 'Distance :'}</span>
                     <span className="text-white">{tcoDistance.toLocaleString(locale)} km</span>
                   </div>
                   <div className="pt-2 border-t border-white/[0.04] flex justify-between text-emerald-400 font-bold">
-                    <span>COÛT RECALCULÉ :</span>
-                    <span>{((tcoEnergy + 78 + 184) / 1250).toFixed(3)} € / km</span>
+                    <span>{locale === 'fr' ? 'COÛT RECALCULÉ :' : locale === 'es' ? 'COSTE RECALCULADO :' : 'RECALCULATED COST :'}</span>
+                    <span>{((tcoEnergy + 78 + 184) / 125).toFixed(3)} € / km</span>
                   </div>
                 </div>
               </div>
@@ -411,38 +419,44 @@ export function LandingPageClient({ locale }: { locale: string }) {
               <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                 <Wrench className="h-6 w-6" />
               </div>
-              <h3 className="text-2xl font-bold text-white font-display">Protocole Maintenance</h3>
+              <h3 className="text-2xl font-bold text-white font-display">
+                {locale === 'fr' ? 'Protocole Maintenance' : locale === 'es' ? 'Protocolo de Mantenimiento' : 'Maintenance Protocol'}
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Anticipez les anomalies avant qu'elles ne surviennent. Le diagnostic prédictif analyse en temps réel l'usure mécanique.
+                {locale === 'fr'
+                  ? "Anticipez les anomalies avant qu'elles ne surviennent. Le diagnostic prédictif analyse en temps réel l'usure mécanique."
+                  : locale === 'es'
+                  ? "Anticípate a las anomalías antes de que ocurran. El diagnóstico predictivo analiza el desgaste mecánico en tiempo real."
+                  : "Anticipate mechanical failures before they happen. The predictive diagnostic analyzes mechanical wear in real time."}
               </p>
 
               {/* Weekly scheduling grid with indicator */}
               <div className="bg-[#2D2D2D]/30 border border-white/[0.04] rounded-2xl p-4 space-y-3 font-mono text-xs text-muted-foreground">
                 <div className="flex justify-between text-[10px] text-white border-b border-white/[0.04] pb-2">
-                  <span>PLANIFICATION INTELLIGENTE</span>
+                  <span>{locale === 'fr' ? 'PLANIFICATION INTELLIGENTE' : locale === 'es' ? 'PLANIFICACIÓN INTELIGENTE' : 'SMART SCHEDULING'}</span>
                   <span className="text-indigo-400 font-bold">WEIBULL</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
                   <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded border border-emerald-500/20">
-                    <div>PNEUS</div>
+                    <div>{locale === 'fr' ? 'PNEUS' : locale === 'es' ? 'NEUMÁTICOS' : 'TIRES'}</div>
                     <div className="font-bold mt-1">94%</div>
                   </div>
                   <div className="bg-emerald-500/10 text-emerald-400 p-2 rounded border border-emerald-500/20">
-                    <div>FREINS</div>
+                    <div>{locale === 'fr' ? 'FREINS' : locale === 'es' ? 'FRENOS' : 'BRAKES'}</div>
                     <div className="font-bold mt-1">82%</div>
                   </div>
                   <div className="bg-amber-500/10 text-amber-400 p-2 rounded border border-amber-500/20">
-                    <div>FILTRE</div>
+                    <div>{locale === 'fr' ? 'FILTRE' : locale === 'es' ? 'FILTRO' : 'FILTER'}</div>
                     <div className="font-bold mt-1">45%</div>
                   </div>
                   <div className="bg-red-500/10 text-red-400 p-2 rounded border border-red-500/20 animate-pulse">
-                    <div>BATTERIE</div>
+                    <div>{locale === 'fr' ? 'BATTERIE' : locale === 'es' ? 'BATERÍA' : 'BATTERY'}</div>
                     <div className="font-bold mt-1">12%</div>
                   </div>
                 </div>
                 <div className="bg-[#121212]/80 p-2.5 rounded border border-white/[0.04] text-[10px] flex items-center justify-between text-white">
-                  <span>🔧 PLANIFIER RÉVISION</span>
-                  <span className="text-indigo-400 font-bold underline cursor-pointer">PRENDRE RDV</span>
+                  <span>{locale === 'fr' ? '🔧 PLANIFIER RÉVISION' : locale === 'es' ? '🔧 PROGRAMAR REVISIÓN' : '🔧 SCHEDULE REVISION'}</span>
+                  <span className="text-indigo-400 font-bold underline cursor-pointer">{locale === 'fr' ? 'PRENDRE RDV' : locale === 'es' ? 'PEDIR CITA' : 'BOOK APPOINTMENT'}</span>
                 </div>
               </div>
             </div>
@@ -455,13 +469,17 @@ export function LandingPageClient({ locale }: { locale: string }) {
         <div className="container max-w-5xl space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-4">
             <Badge className="bg-[#2D2D2D]/80 text-[#C5A059] border border-[#C5A059]/20 rounded-full px-4 py-1 text-xs font-mono uppercase tracking-widest">
-              L'Historique Inaltérable
+              {locale === 'fr' ? "L'Historique Inaltérable" : locale === 'es' ? 'El Historial Inalterable' : 'The Immutable History'}
             </Badge>
             <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white leading-none">
-              Protocole d'Intégrité
+              {locale === 'fr' ? "Protocole d'Intégrité" : locale === 'es' ? 'Protocolo de Integridad' : 'Integrity Protocol'}
             </h2>
             <p className="text-muted-foreground">
-              Trois phases technologiques interconnectées garantissant une certification infalsifiable de la vie de votre actif automobile.
+              {locale === 'fr' 
+                ? 'Trois phases technologiques interconnectées garantissant une certification infalsifiable de la vie de votre actif automobile.'
+                : locale === 'es'
+                ? 'Tres fases tecnológicas interconectadas que garantizan una certificación infalsificable de la vida de tu activo.'
+                : 'Three interconnected technological phases ensuring an unalterable certification of your automotive asset.'}
             </p>
           </div>
 
@@ -469,10 +487,18 @@ export function LandingPageClient({ locale }: { locale: string }) {
             {/* Card 1 — Phase de Collecte */}
             <div className="protocol-card sticky top-28 bg-[#16161A] border border-white/[0.06] rounded-[2.5rem] p-8 sm:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.6)] grid md:grid-cols-2 gap-8 items-center min-h-[400px]">
               <div className="space-y-6">
-                <span className="text-xs font-mono text-[#007AFF] font-bold tracking-widest uppercase">PHASE 01 // COLLECTE SÉCURISÉE</span>
-                <h3 className="text-3xl font-bold text-white font-display">Collecte & Scan Instantané</h3>
+                <span className="text-xs font-mono text-[#007AFF] font-bold tracking-widest uppercase">
+                  {locale === 'fr' ? 'PHASE 01 // COLLECTE SÉCURISÉE' : locale === 'es' ? 'FASE 01 // CAPTURA SEGURA' : 'PHASE 01 // SECURE CAPTURE'}
+                </span>
+                <h3 className="text-3xl font-bold text-white font-display">
+                  {locale === 'fr' ? 'Collecte & Scan Instantané' : locale === 'es' ? 'Captura y Escaneo Instantáneo' : 'Capture & Instant Scan'}
+                </h3>
                 <p className="text-muted-foreground leading-relaxed font-sans text-sm">
-                  Chaque dépense, reçu de recharge ou facture est immédiatement numérisé et converti en données exploitables. Une ligne laser intelligente certifie la validité des métadonnées dès la capture.
+                  {locale === 'fr'
+                    ? 'Chaque dépense, reçu de recharge ou facture est immédiatement numérisé et converti en données exploitables. Une ligne laser intelligente certifie la validité des métadonnées dès la capture.'
+                    : locale === 'es'
+                    ? 'Cada gasto, ticket de carga o factura se digitaliza y se convierte inmediatamente en datos procesables. Una línea láser inteligente certifica la validez de los metadatos.'
+                    : 'Every expense, charging receipt, or invoice is immediately digitized and converted into actionable data. An intelligent laser line certifies the metadata validity upon capture.'}
                 </p>
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground bg-[#2D2D2D]/30 border border-white/[0.04] p-3 rounded-xl max-w-xs">
                   <Fingerprint className="h-5 w-5 text-[#007AFF]" />
@@ -494,10 +520,18 @@ export function LandingPageClient({ locale }: { locale: string }) {
             {/* Card 2 — Phase d'Analyse */}
             <div className="protocol-card sticky top-32 bg-[#1A1A20] border border-white/[0.06] rounded-[2.5rem] p-8 sm:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.6)] grid md:grid-cols-2 gap-8 items-center min-h-[400px]">
               <div className="space-y-6">
-                <span className="text-xs font-mono text-indigo-400 font-bold tracking-widest uppercase">PHASE 02 // ANALYSE PRÉDICTIVE</span>
-                <h3 className="text-3xl font-bold text-white font-display">Le Jumeau Numérique</h3>
+                <span className="text-xs font-mono text-indigo-400 font-bold tracking-widest uppercase">
+                  {locale === 'fr' ? 'PHASE 02 // ANALYSE PRÉDICTIVE' : locale === 'es' ? 'FASE 02 // ANÁLISIS PREDICTIVO' : 'PHASE 02 // PREDICTIVE ANALYSIS'}
+                </span>
+                <h3 className="text-3xl font-bold text-white font-display">
+                  {locale === 'fr' ? 'Le Jumeau Numérique' : locale === 'es' ? 'El Gemelo Digital' : 'The Digital Twin'}
+                </h3>
                 <p className="text-muted-foreground leading-relaxed font-sans text-sm">
-                  Notre algorithme croise la télémétrie OBD en temps réel avec des modèles physiques d'usure. Nous générons une réplique virtuelle dynamique pour prédire la durée de vie résiduelle des pièces.
+                  {locale === 'fr'
+                    ? "Notre algorithme croise la télémétrie OBD en temps réel avec des modèles physiques d'usure. Nous générons une réplique virtuelle dynamique pour prédire la durée de vie résiduelle des pièces."
+                    : locale === 'es'
+                    ? 'Nuestro algoritmo cruza la telemetría OBD en tiempo real con modelos físicos de desgaste. Generamos una réplica virtual dinámica para predecir la vida útil restante.'
+                    : 'Our algorithm crosses real-time OBD telemetry with physical wear models. We generate a dynamic virtual replica to predict remaining component life.'}
                 </p>
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground bg-[#2D2D2D]/30 border border-white/[0.04] p-3 rounded-xl max-w-xs">
                   <Cpu className="h-5 w-5 text-indigo-400" />
@@ -521,10 +555,18 @@ export function LandingPageClient({ locale }: { locale: string }) {
             {/* Card 3 — Phase de Certification */}
             <div className="protocol-card sticky top-36 bg-[#1D1A26] border border-white/[0.06] rounded-[2.5rem] p-8 sm:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.6)] grid md:grid-cols-2 gap-8 items-center min-h-[400px]">
               <div className="space-y-6">
-                <span className="text-xs font-mono text-emerald-400 font-bold tracking-widest uppercase">PHASE 03 // LABELLISATION</span>
-                <h3 className="text-3xl font-bold text-white font-display">Carnet Certifié Immuable</h3>
+                <span className="text-xs font-mono text-emerald-400 font-bold tracking-widest uppercase">
+                  {locale === 'fr' ? 'PHASE 03 // LABELLISATION' : locale === 'es' ? 'FASE 03 // CERTIFICACIÓN' : 'PHASE 03 // CERTIFICATION'}
+                </span>
+                <h3 className="text-3xl font-bold text-white font-display">
+                  {locale === 'fr' ? 'Carnet Certifié Immuable' : locale === 'es' ? 'Libro Certificado Inalterable' : 'Immutable Certified Logbook'}
+                </h3>
                 <p className="text-muted-foreground leading-relaxed font-sans text-sm">
-                  Toutes les transactions et interventions d'entretien validées génèrent un hash SHA-256 sécurisé chaîné en base de données. Supabase interdit formellement toute tentative de modification fiscale.
+                  {locale === 'fr'
+                    ? "Toutes les transactions et interventions d'entretien validées génèrent un hash SHA-256 sécurisé chaîné en base de données. Supabase interdit formellement toute tentative de modification fiscale."
+                    : locale === 'es'
+                    ? 'Todas las transacciones y mantenimientos validados generan un hash SHA-256 seguro encadenado en la base de datos. Supabase impide cualquier alteración.'
+                    : 'All validated transactions and maintenance events generate a secure SHA-256 hash chained in the database. Supabase strictly blocks any direct tampering attempts.'}
                 </p>
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground bg-[#2D2D2D]/30 border border-white/[0.04] p-3 rounded-xl max-w-xs">
                   <Lock className="h-5 w-5 text-emerald-400" />
@@ -533,7 +575,9 @@ export function LandingPageClient({ locale }: { locale: string }) {
               </div>
               <div className="relative border border-white/[0.06] rounded-2xl p-6 bg-[#2D2D2D]/20 overflow-hidden flex flex-col items-center justify-center min-h-[220px] text-center space-y-4">
                 <CheckCircle2 className="h-16 w-16 text-emerald-400 animate-pulse" />
-                <div className="font-mono text-xs text-emerald-400 font-bold">EXPORT PDF CERTIFIÉ VALIDÉ</div>
+                <div className="font-mono text-xs text-emerald-400 font-bold">
+                  {locale === 'fr' ? 'EXPORT PDF CERTIFIÉ VALIDÉ' : locale === 'es' ? 'EXPORTACIÓN PDF CERTIFICADA' : 'CERTIFIED PDF EXPORT SUCCESS'}
+                </div>
                 <div className="font-mono text-[9px] text-muted-foreground">SIGNATURE INTERNE: VELOCE_SECURE_AUTH</div>
               </div>
             </div>
@@ -549,19 +593,23 @@ export function LandingPageClient({ locale }: { locale: string }) {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="space-y-4">
               <Badge className="bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/20 rounded-full px-3 py-0.5 text-xs font-mono uppercase">
-                Préservation de Capital
+                {locale === 'fr' ? 'Préservation de Capital' : locale === 'es' ? 'Preservación de Capital' : 'Capital Preservation'}
               </Badge>
-              <h3 className="text-3xl sm:text-4xl font-bold font-display text-white">Indice de Revente</h3>
+              <h3 className="text-3xl sm:text-4xl font-bold font-display text-white">{tFeatures('resaleTitle')}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Les véhicules entretenus sous le protocole certifié VeloceWealth conservent en moyenne une valeur résiduelle sur le marché de l'occasion nettement supérieure aux autres.
+                {tFeatures('resaleDescription')}
               </p>
             </div>
             <div className="flex flex-col items-center justify-center py-6 bg-[#2D2D2D]/30 border border-white/[0.04] rounded-2xl text-center space-y-2">
-              <span className="text-xs text-muted-foreground font-mono uppercase">Valeur Résiduelle Moyenne</span>
+              <span className="text-xs text-muted-foreground font-mono uppercase">
+                {locale === 'fr' ? 'Valeur Résiduelle Moyenne' : locale === 'es' ? 'Valor Residual Medio' : 'Average Residual Value'}
+              </span>
               <div className="text-7xl font-bold font-mono text-[#C5A059] tracking-tighter tabular-nums">
                 {resaleValue}%
               </div>
-              <span className="text-xs text-emerald-400 font-mono">+12.7% vs suivi classique</span>
+              <span className="text-xs text-emerald-400 font-mono">
+                {locale === 'fr' ? '+12.7% vs suivi classique' : locale === 'es' ? '+12.7% vs seguimiento estándar' : '+12.7% vs standard tracking'}
+              </span>
             </div>
           </div>
         </div>
@@ -585,87 +633,87 @@ export function LandingPageClient({ locale }: { locale: string }) {
             <Card className="p-8 border border-white/[0.08] bg-[#16161A]/50 rounded-[2.5rem] flex flex-col justify-between shadow-xl">
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-display text-xl font-bold text-white">Standard</h4>
-                  <p className="text-xs text-muted-foreground mt-1">Pour commencer à comprendre vos coûts.</p>
+                  <h4 className="font-display text-xl font-bold text-white">{tPricing('standardName')}</h4>
+                  <p className="text-xs text-muted-foreground mt-1">{tPricing('standardDescription')}</p>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <span className="font-mono text-5xl font-bold text-white">0</span>
-                  <span className="text-muted-foreground font-mono">€</span>
+                  <span className="text-muted-foreground font-mono">{locale === 'fr' || locale === 'es' ? '€' : '$'}</span>
                 </div>
                 <ul className="space-y-3 text-sm text-muted-foreground pt-4 border-t border-white/[0.04]">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    3 scans OCR offerts/mois
+                    {locale === 'fr' ? '3 scans OCR offerts/mois' : locale === 'es' ? '3 escaneos OCR gratis al mes' : '3 free OCR scans / month'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Rappels d'entretien manuels
+                    {locale === 'fr' ? "Rappels d'entretien manuels" : locale === 'es' ? 'Recordatorios de mantenimiento manuales' : 'Manual reminders'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Carte interactive des stations
+                    {locale === 'fr' ? 'Carte interactive des stations' : locale === 'es' ? 'Mapa de estaciones' : 'Station map'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    1 véhicule supporté
+                    {locale === 'fr' ? '1 véhicule supporté' : locale === 'es' ? '1 vehículo compatible' : '1 supported vehicle'}
                   </li>
                 </ul>
               </div>
               <Button asChild variant="outline" className="mt-8 rounded-full border-white/10 text-white hover:bg-white/5 py-6">
-                <Link href="/signup">Démarrer gratuitement</Link>
+                <Link href="/signup">{tPricing('standardCta')}</Link>
               </Button>
             </Card>
 
             {/* Premium Plan - Glassmorphic design highlight */}
             <Card className="p-8 border border-[#007AFF]/40 bg-gradient-to-b from-[#007AFF]/10 to-transparent backdrop-blur-xl rounded-[2.5rem] flex flex-col justify-between relative shadow-2xl">
               <Badge className="bg-[#007AFF] text-white absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border-none shadow-[0_0_15px_rgba(0,122,255,0.6)] px-4 py-1 text-xs">
-                Le plus choisi
+                {tPricing('mostChosen')}
               </Badge>
               <div className="space-y-6">
                 <div className="pt-2">
-                  <h4 className="font-display text-xl font-bold text-white">Premium</h4>
-                  <p className="text-xs text-[#007AFF] mt-1 font-semibold">Pour les passionnés & investisseurs individuels.</p>
+                  <h4 className="font-display text-xl font-bold text-white">{tPricing('premiumName')}</h4>
+                  <p className="text-xs text-[#007AFF] mt-1 font-semibold">{tPricing('premiumDescription')}</p>
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="font-mono text-5xl font-bold text-white">9,99</span>
-                    <span className="text-muted-foreground font-mono">€ / mois</span>
+                    <span className="text-muted-foreground font-mono">{tPricing('premiumPerMonth')}</span>
                   </div>
-                  <div className="text-[10px] text-emerald-400 mt-1">ou 89,99 €/an (−25 % de réduction)</div>
+                  <div className="text-[10px] text-emerald-400 mt-1">{tPricing('premiumPerYear')}</div>
                 </div>
                 <ul className="space-y-3 text-sm text-white pt-4 border-t border-white/[0.04]">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    OCR illimité synchrone PDF
+                    {locale === 'fr' ? 'OCR illimité synchrone PDF' : locale === 'es' ? 'Escaneo OCR ilimitado de PDF' : 'Unlimited synchronous PDF OCR'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    Suivi TCO & Mix énergétique
+                    {locale === 'fr' ? 'Suivi TCO & Mix énergétique' : locale === 'es' ? 'TCO y Mix de energía en tiempo real' : 'TCO & Energy mix tracking'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    Export fiscal certifié
+                    {locale === 'fr' ? 'Export fiscal certifié' : locale === 'es' ? 'Exportación fiscal certificada' : 'Tax-ready certified export'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    Carnet certifié (Immutabilité RLS)
+                    {locale === 'fr' ? 'Carnet certifié (Immutabilité RLS)' : locale === 'es' ? 'Libro certificado (Immutabilidad RLS)' : 'Certified logbook (RLS Immutability)'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    Télémétrie & Alertes PHM
+                    {locale === 'fr' ? 'Télémétrie & Alertes PHM' : locale === 'es' ? 'Telemetría y Alertas PHM predictivas' : 'Predictive PHM Alerts & Telemetry'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
-                    Véhicules illimités
+                    {locale === 'fr' ? 'Véhicules illimités' : locale === 'es' ? 'Vehículos ilimitados' : 'Unlimited vehicles'}
                   </li>
                 </ul>
               </div>
               <div className="mt-8 grid gap-3">
-                <CheckoutButton interval="monthly" tier="premium" label="Essai 30j · Mensuel" />
+                <CheckoutButton interval="monthly" tier="premium" label={tPricing('premiumCtaMonthly')} />
                 <CheckoutButton
                   interval="yearly"
                   tier="premium"
-                  label="Essai 30j · Annuel (−25 %)"
+                  label={tPricing('premiumCtaYearly')}
                   variant="outline"
                   className="rounded-full py-6 text-white border-white/10 hover:bg-white/5"
                 />
@@ -676,49 +724,49 @@ export function LandingPageClient({ locale }: { locale: string }) {
             <Card className="p-8 border border-white/[0.08] bg-[#16161A]/50 rounded-[2.5rem] flex flex-col justify-between shadow-xl relative">
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-display text-xl font-bold text-white">Family / Pro</h4>
-                  <p className="text-xs text-muted-foreground mt-1">Pour la gestion multi-conducteurs et flottes privées.</p>
+                  <h4 className="font-display text-xl font-bold text-white">{tPricing('fleetName')}</h4>
+                  <p className="text-xs text-muted-foreground mt-1">{tPricing('fleetDescription')}</p>
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="font-mono text-5xl font-bold text-white">16,99</span>
-                    <span className="text-muted-foreground font-mono">€ / mois</span>
+                    <span className="text-muted-foreground font-mono">{tPricing('fleetPerMonth')}</span>
                   </div>
-                  <div className="text-[10px] text-emerald-400 mt-1">ou 159,99 €/an (Rendement maximal)</div>
+                  <div className="text-[10px] text-emerald-400 mt-1">{tPricing('fleetPerYear')}</div>
                 </div>
                 <ul className="space-y-3 text-sm text-muted-foreground pt-4 border-t border-white/[0.04]">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Toutes les fonctionnalités Premium
+                    {locale === 'fr' ? 'Toutes les fonctionnalités Premium' : locale === 'es' ? 'Todas las funciones Premium' : 'All Premium features included'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Jusqu'à 5 conducteurs / comptes liés
+                    {locale === 'fr' ? "Jusqu'à 5 conducteurs / comptes liés" : locale === 'es' ? 'Hasta 5 conductores / cuentas vinculadas' : 'Up to 5 drivers / linked accounts'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Rapports et analyses consolidés
+                    {locale === 'fr' ? 'Rapports et analyses consolidés' : locale === 'es' ? 'Informes y análisis consolidados' : 'Consolidated reports & analytics'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Accès API & Export comptable direct
+                    {locale === 'fr' ? 'Accès API & Export comptable direct' : locale === 'es' ? 'Acceso API y Exportación contable directa' : 'Direct API access & accounting export'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    Support prioritaire sous 2 heures
+                    {locale === 'fr' ? 'Support prioritaire sous 2 heures' : locale === 'es' ? 'Soporte prioritario en menos de 2 horas' : 'Priority support under 2 hours'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#007AFF]" />
-                    5 jumeaux numériques actifs
+                    {locale === 'fr' ? '5 jumeaux numériques actifs' : locale === 'es' ? '5 gemelos digitales activos' : '5 active digital twins'}
                   </li>
                 </ul>
               </div>
               <div className="mt-8 grid gap-3">
-                <CheckoutButton interval="monthly" tier="family" label="Essai 30j · Mensuel" />
+                <CheckoutButton interval="monthly" tier="family" label={tPricing('premiumCtaMonthly')} />
                 <CheckoutButton
                   interval="yearly"
                   tier="family"
-                  label="Essai 30j · Annuel (−21 %)"
+                  label={tPricing('premiumCtaYearly')}
                   variant="outline"
                   className="rounded-full py-6 text-white border-white/10 hover:bg-white/5"
                 />
@@ -789,7 +837,13 @@ export function LandingPageClient({ locale }: { locale: string }) {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center pt-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" strokeWidth={2} />
-              <span>30 jours d'essai gratuit · sans engagement · sans publicité</span>
+              <span>
+                {locale === 'fr' 
+                  ? "30 jours d'essai gratuit · sans engagement · sans publicité" 
+                  : locale === 'es' 
+                  ? "Prueba gratis de 30 días · Sin compromiso · Sin publicidad" 
+                  : "30-day free trial · Cancel anytime · Ad-free"}
+              </span>
             </div>
           </div>
         </Card>
