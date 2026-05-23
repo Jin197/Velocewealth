@@ -1,11 +1,12 @@
 import { Link } from '@/lib/i18n/routing';
-import { Sparkles, Check, ExternalLink, CreditCard, Receipt } from 'lucide-react';
+import { Sparkles, Check, CreditCard, Receipt } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getProfile } from '@/lib/data';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ManageSubscriptionButton } from './manage-button';
+import { BillingPricingSelector } from './billing-pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,15 +50,11 @@ export default async function BillingPage() {
               </span>
             </div>
           </div>
-          <div className="shrink-0 flex items-center">
-            {isSubscribed ? (
+          {isSubscribed && (
+            <div className="shrink-0 flex items-center">
               <ManageSubscriptionButton className="w-full sm:w-auto text-center justify-center font-semibold" />
-            ) : (
-              <Button asChild className="w-full sm:w-auto text-center justify-center">
-                <Link href="/pricing">{isTrial ? 'Activer mon abonnement' : 'Passer Premium'}</Link>
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <ul className="mt-6 grid sm:grid-cols-2 gap-2 text-sm">
@@ -76,6 +73,9 @@ export default async function BillingPage() {
           ))}
         </ul>
       </Card>
+
+      {/* Renders pricing selector directly inside settings for unsubscribed users */}
+      {!isSubscribed && <BillingPricingSelector />}
 
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
