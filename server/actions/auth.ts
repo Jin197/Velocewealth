@@ -125,6 +125,7 @@ export async function signInWithProvider(
     provider,
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback`,
+      queryParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
     },
   });
   if (error) return { error: error.message };
