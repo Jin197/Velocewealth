@@ -32,11 +32,19 @@ export async function POST(req: Request) {
     // 2. Premium Gate check
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan_tier')
+      .select('plan_tier, created_at')
       .eq('id', user.id)
       .single();
 
-    if (!profile || profile.plan_tier === 'free') {
+    if (!profile) {
+      return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 });
+    }
+
+    const createdAt = profile.created_at ? new Date(profile.created_at) : new Date();
+    const isTrial = profile.plan_tier === 'free' && (Date.now() - createdAt.getTime()) < 14 * 24 * 60 * 60 * 1000;
+    const planTier = isTrial ? 'premium' : profile.plan_tier;
+
+    if (planTier === 'free') {
       return NextResponse.json(
         { error: 'Le module Chat Assistant est réservé aux membres Premium.' },
         { status: 403 }

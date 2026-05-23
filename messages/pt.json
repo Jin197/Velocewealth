@@ -204,7 +204,8 @@
     "accept": "Entendido",
     "manage": "Gerir",
     "acceptAll": "Aceitar tudo",
-    "refuseAll": "Recusar tudo"
+    "refuseAll": "Recusar tudo",
+    "dpoMention": "Para qualquer dúvida sobre seus dados, entre em contato com o DPO em dpo@velocewealth.app."
   },
   "legal": {
     "termsTitle": "Termos de Utilização",

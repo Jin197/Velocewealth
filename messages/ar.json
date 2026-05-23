@@ -204,7 +204,8 @@
     "accept": "فهمت",
     "manage": "إدارة",
     "acceptAll": "قبول الكل",
-    "refuseAll": "رفض الكل"
+    "refuseAll": "رفض الكل",
+    "dpoMention": "لأي استفسارات تتعلق ببياناتك، اتصل بمسؤول حماية البيانات لدينا على dpo@velocewealth.app."
   },
   "legal": {
     "termsTitle": "شروط الاستخدام",

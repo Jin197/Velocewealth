@@ -41,16 +41,19 @@ export function CookieBanner() {
         <div className="flex-1 min-w-0">
           <div className="font-display font-semibold text-sm text-white">{t('title')}</div>
           <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t('description')}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" onClick={handleAccept} className="bg-[#007AFF] hover:bg-[#007AFF]/90 text-white rounded-full px-4 font-semibold shadow-[0_0_15px_rgba(0,122,255,0.3)]">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button size="sm" onClick={handleAccept} className="bg-[#007AFF] hover:bg-[#007AFF]/90 text-white rounded-full px-5 py-2 font-semibold shadow-[0_0_15px_rgba(0,122,255,0.3)]">
               {t('acceptAll') || 'Tout accepter'}
             </Button>
-            <Button size="sm" variant="outline" onClick={handleRefuse} className="border-white/10 hover:bg-white/5 text-[#F5F5F7] rounded-full px-4">
-              {t('refuseAll') || 'Refuser les cookies optionnels'}
+            <Button size="sm" onClick={handleRefuse} className="bg-[#2D2D2D]/80 hover:bg-[#2D2D2D] text-[#F5F5F7] border border-white/10 rounded-full px-5 py-2 font-semibold shadow-[0_0_15px_rgba(0,0,0,0.2)]">
+              {t('refuseAll') || 'Refuser tout'}
             </Button>
-            <Button size="sm" variant="ghost" asChild className="text-muted-foreground hover:text-[#F5F5F7]">
+            <Button size="sm" variant="ghost" asChild className="text-muted-foreground hover:text-[#F5F5F7] rounded-full">
               <Link href="/legal/cookies">{t('manage')}</Link>
             </Button>
+          </div>
+          <div className="mt-3 text-[10px] text-muted-foreground/60 leading-relaxed border-t border-white/5 pt-2.5">
+            {t('dpoMention') || 'Pour toute question sur vos données, contactez notre DPO à dpo@velocewealth.app.'}
           </div>
         </div>
         <button

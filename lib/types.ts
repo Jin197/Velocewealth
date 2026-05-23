@@ -117,4 +117,7 @@ export interface UserProfile {
   currency: Currency;
   country: string;
   planTier: 'free' | 'premium' | 'family';
+  createdAt?: string;
+  isTrial?: boolean;
 }
+

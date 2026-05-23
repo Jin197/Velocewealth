@@ -124,6 +124,11 @@ function mapGarage(row: Record<string, unknown>): Garage {
 }
 
 function mapProfile(row: Record<string, unknown>): UserProfile {
+  const planTier = row.plan_tier as 'free' | 'premium' | 'family';
+  const createdAtStr = row.created_at as string;
+  const createdAt = createdAtStr ? new Date(createdAtStr) : new Date();
+  const isTrial = planTier === 'free' && (Date.now() - createdAt.getTime()) < 14 * 24 * 60 * 60 * 1000;
+
   return {
     id: row.id as string,
     fullName: row.full_name as string,
@@ -132,7 +137,9 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
     locale: row.locale as Locale,
     currency: row.currency as Currency,
     country: row.country as string,
-    planTier: row.plan_tier as 'free' | 'premium' | 'family',
+    planTier: isTrial ? 'premium' : planTier,
+    createdAt: createdAtStr,
+    isTrial,
   };
 }
 

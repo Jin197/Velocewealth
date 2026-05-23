@@ -13,29 +13,40 @@ export default async function BillingPage() {
   const profile = isSupabaseConfigured() ? await getProfile() : null;
   const isPremium = profile?.planTier === 'premium';
   const isFamily = profile?.planTier === 'family';
-  const isSubscribed = isPremium || isFamily;
+  const isTrial = profile?.isTrial ?? false;
+  const isSubscribed = (isPremium || isFamily) && !isTrial;
+
+  let remainingDays = 0;
+  if (isTrial && profile?.createdAt) {
+    const elapsedMs = Date.now() - new Date(profile.createdAt).getTime();
+    remainingDays = Math.max(0, Math.ceil((14 * 24 * 60 * 60 * 1000 - elapsedMs) / (24 * 60 * 60 * 1000)));
+  }
 
   return (
     <div className="space-y-6">
       <Card variant="premium" className="p-6">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-6">
           <div className="flex-1 min-w-0">
-            <Badge variant={isFamily ? 'family' : isPremium ? 'premium' : 'default'}>
-              <Sparkles className="h-3 w-3" /> {isSubscribed ? `${isFamily ? 'Family/Pro' : 'Premium'} actif` : 'Standard'}
+            <Badge variant={isFamily ? 'family' : (isPremium || isTrial) ? 'premium' : 'default'}>
+              <Sparkles className="h-3 w-3" /> {isSubscribed ? `${isFamily ? 'Family/Pro' : 'Premium'} actif` : isTrial ? 'Essai Premium actif' : 'Standard'}
             </Badge>
             <div className="font-display text-2xl font-bold mt-3">
-              {isSubscribed ? `Velocewealth ${isFamily ? 'Family/Pro' : 'Premium'}` : 'Velocewealth Standard'}
+              {isSubscribed ? `Velocewealth ${isFamily ? 'Family/Pro' : 'Premium'}` : isTrial ? 'Essai Velocewealth Premium' : 'Velocewealth Standard'}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {isSubscribed
                 ? 'Renouvellement automatique. Modifiez votre abonnement à tout moment.'
+                : isTrial
+                ? `Profitez de toutes les fonctions Premium pendant 14 jours (sans carte bancaire). Il vous reste ${remainingDays} jour${remainingDays > 1 ? 's' : ''}.`
                 : 'Passez Premium pour OCR illimité, carnet certifié et export fiscal.'}
             </p>
             <div className="flex items-baseline gap-1 mt-4">
               <span className="font-mono text-3xl font-bold tabular-nums">
-                {isFamily ? '16,99' : isPremium ? '9,99' : '0'}
+                {isSubscribed ? (isFamily ? '16,99' : '9,99') : '0'}
               </span>
-              <span className="text-muted-foreground">€/mois</span>
+              <span className="text-muted-foreground">
+                {isTrial ? '€ (Période d\'essai — puis 9,99 €/mois)' : '€/mois'}
+              </span>
             </div>
           </div>
           <div className="shrink-0 flex items-center">
@@ -43,7 +54,7 @@ export default async function BillingPage() {
               <ManageSubscriptionButton className="w-full sm:w-auto text-center justify-center font-semibold" />
             ) : (
               <Button asChild className="w-full sm:w-auto text-center justify-center">
-                <Link href="/pricing">Passer Premium</Link>
+                <Link href="/pricing">{isTrial ? 'Activer mon abonnement' : 'Passer Premium'}</Link>
               </Button>
             )}
           </div>

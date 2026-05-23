@@ -34,14 +34,19 @@ export async function POST(req: Request) {
     // Premium gate: free tier has FREE_QUOTA / month
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan_tier, ocr_credits_used')
+      .select('plan_tier, ocr_credits_used, created_at')
       .eq('id', user.id)
       .single();
     if (!profile) {
       return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 });
     }
+
+    const createdAt = profile.created_at ? new Date(profile.created_at) : new Date();
+    const isTrial = profile.plan_tier === 'free' && (Date.now() - createdAt.getTime()) < 14 * 24 * 60 * 60 * 1000;
+    const planTier = isTrial ? 'premium' : profile.plan_tier;
+
     if (
-      profile.plan_tier === 'free' &&
+      planTier === 'free' &&
       (profile.ocr_credits_used ?? 0) >= FREE_QUOTA
     ) {
       return NextResponse.json(
