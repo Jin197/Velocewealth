@@ -231,84 +231,93 @@ export function StationsMap({
       });
     };
 
-    const updatePOIs = () => {
-      const zoom = map.getZoom();
-      
-      let localStations: Station[] = [];
-      let localGarages: Garage[] = [];
+    const fetchNearbyPOIs = async (lng: number, lat: number): Promise<{ stations: Station[]; garages: Garage[] }> => {
+      const queries = [
+        { type: 'gas', query: 'gas station' },
+        { type: 'charger', query: 'charging station' },
+        { type: 'garage', query: 'car repair' }
+      ];
 
-      // Only search dynamic POIs when zoomed in sufficiently to prevent clutter and API performance overload
-      if (zoom >= 11) {
-        try {
-          const features = map.queryRenderedFeatures({ layers: ['poi-label'] });
-          const seenIds = new Set<string>();
+      const localStations: Station[] = [];
+      const localGarages: Garage[] = [];
 
-          features.forEach((f) => {
-            const props = f.properties;
-            if (!props || !f.geometry || f.geometry.type !== 'Point') return;
+      try {
+        const promises = queries.map(async (q) => {
+          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q.query)}.json?proximity=${lng},${lat}&types=poi&limit=8&access_token=${token}`;
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const data = await res.json();
+          
+          (data.features || []).forEach((f: any) => {
+            const coords = f.geometry.coordinates;
+            const name = f.text || f.place_name.split(',')[0];
+            const address = f.properties?.address || f.place_name.split(',').slice(1).join(',').trim();
+            const context = f.context || [];
             
-            const coords = (f.geometry as any).coordinates;
-            const name = props.name || props.name_fr || props.name_en;
-            if (!name) return;
+            const city = context.find((c: any) => c.id.startsWith('place'))?.text || 'Athènes';
+            const countryCode = context.find((c: any) => c.id.startsWith('country'))?.short_code?.toUpperCase() || 'GR';
 
-            const uniqueId = `${name}-${coords[0]}-${coords[1]}`;
-            if (seenIds.has(uniqueId)) return;
-            seenIds.add(uniqueId);
-
-            const category = props.class || props.category || '';
-            const titleLc = name.toLowerCase();
-
-            const isGas = category === 'gas_station' || category === 'gas' || titleLc.includes('station') || titleLc.includes('totalenergies') || titleLc.includes('esso') || titleLc.includes('shell') || titleLc.includes('bp');
-            const isCharger = category === 'charging_station' || category === 'charging' || titleLc.includes('ionity') || titleLc.includes('supercharger') || titleLc.includes('borne');
-            const isGarage = category === 'car_repair' || category === 'car' || category === 'automotive' || titleLc.includes('garage') || titleLc.includes('auto') || titleLc.includes('moteur') || titleLc.includes('repair') || titleLc.includes('carrosserie');
-
-            if (isGas || isCharger) {
+            if (q.type === 'gas' || q.type === 'charger') {
               localStations.push({
-                id: uniqueId,
+                id: f.id || `${name}-${coords[0]}-${coords[1]}`,
                 name: name,
-                brand: props.brand || (isGas ? 'Station-Service' : 'Recharge Électrique'),
-                type: isCharger ? 'charger' : 'gas',
+                brand: q.type === 'gas' ? 'Station-Service' : 'Recharge Électrique',
+                type: q.type === 'charger' ? 'charger' : 'gas',
                 lat: coords[1],
                 lng: coords[0],
-                address: props.address || 'Adresse à proximité',
-                city: props.city || 'Locale',
-                country: props.country || 'FR',
-                available: isCharger ? Math.floor(Math.random() * 4) + 1 : undefined,
-                total: isCharger ? 6 : undefined,
+                address: address || 'Adresse à proximité',
+                city: city,
+                country: countryCode,
+                available: q.type === 'charger' ? Math.floor(Math.random() * 4) + 1 : undefined,
+                total: q.type === 'charger' ? 6 : undefined,
               });
-            } else if (isGarage) {
+            } else if (q.type === 'garage') {
               localGarages.push({
-                id: uniqueId,
+                id: f.id || `${name}-${coords[0]}-${coords[1]}`,
                 name: name,
-                address: props.address || 'Adresse à proximité',
-                city: props.city || 'Locale',
-                country: props.country || 'FR',
+                address: address || 'Adresse de proximité',
+                city: city,
+                country: countryCode,
                 lat: coords[1],
                 lng: coords[0],
                 isPartner: false,
-                rating: props.rating ? Number(props.rating) : 4.0 + (Math.random() * 0.9),
-                reviewCount: props.reviews ? Number(props.reviews) : Math.floor(Math.random() * 120) + 10,
+                rating: 4.0 + (Math.random() * 0.9),
+                reviewCount: Math.floor(Math.random() * 120) + 10,
                 services: ['Entretien', 'Vidange', 'Diagnostic', 'Freins'],
               });
             }
           });
-        } catch (e) {
-          console.warn('[Mapbox POI Extraction failed]', e);
-        }
+        });
+
+        await Promise.all(promises);
+      } catch (e) {
+        console.warn('[Mapbox Geocoding POI Fetch failed]', e);
       }
 
-      // If zoomed out, or no local POIs were found in high zoom, fallback to seeded database items
-      if (localStations.length === 0 && localGarages.length === 0) {
-        localStations = stations;
-        localGarages = garages;
+      return { stations: localStations, garages: localGarages };
+    };
+
+    const updatePOIs = async () => {
+      const center = map.getCenter();
+      
+      // Fetch dynamic POIs in real-time based on geocoded proximity, works universally anywhere on Earth (e.g. Athens)
+      const { stations: localStations, garages: localGarages } = await fetchNearbyPOIs(center.lng, center.lat);
+
+      let finalStations = localStations;
+      let finalGarages = localGarages;
+
+      // Fallback only if Geocoding returns absolutely nothing
+      if (finalStations.length === 0 && finalGarages.length === 0) {
+        finalStations = stations;
+        finalGarages = garages;
       }
 
       const activePins: Pin[] = [
-        ...localStations.map<Pin>((s) => ({
+        ...finalStations.map<Pin>((s) => ({
           kind: s.type === 'charger' ? 'charger' : 'gas',
           data: s,
         })),
-        ...localGarages.map<Pin>((g) => ({
+        ...finalGarages.map<Pin>((g) => ({
           kind: 'garage',
           data: g,
         })),
@@ -318,7 +327,7 @@ export function StationsMap({
 
       // Dispatch dynamic viewport event to automatically update sidebar listings in real-time
       window.dispatchEvent(new CustomEvent('veloce:viewport-change', {
-        detail: { stations: localStations, garages: localGarages }
+        detail: { stations: finalStations, garages: finalGarages }
       }));
     };
 
