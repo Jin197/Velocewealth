@@ -41,8 +41,8 @@ export function LocaleSwitcher({ variant = 'compact' }: Props) {
           onChange={(e) => handleChange(e.target.value as Locale)}
           disabled={pending}
           className={cn(
-            'appearance-none rounded-btn border border-border bg-card pl-6 sm:pl-7 pr-1.5 sm:pr-7 py-1.5 text-xs font-medium cursor-pointer',
-            'w-[52px] sm:w-auto overflow-hidden transition-all duration-300',
+            'appearance-none rounded-btn border border-border bg-card pl-7 pr-7 py-1.5 text-xs font-medium cursor-pointer',
+            'w-auto transition-all duration-300',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )}
         >
@@ -52,7 +52,7 @@ export function LocaleSwitcher({ variant = 'compact' }: Props) {
             </option>
           ))}
         </select>
-        <Globe className="pointer-events-none absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+        <Globe className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
       </div>
     );
   }
