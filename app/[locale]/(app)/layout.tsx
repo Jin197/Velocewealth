@@ -1,9 +1,13 @@
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { Topbar } from '@/components/layout/topbar';
 import { UserProvider } from '@/components/user-context';
+import { MfaBanner } from '@/components/domain/mfa-banner';
 import { getProfile } from '@/lib/data';
 import { isSupabaseConfigured } from '@/lib/env';
+import { getMfaStatus, type MfaStatus } from '@/lib/security/mfa-status';
 import { cn } from '@/lib/utils';
 import { Link } from '@/lib/i18n/routing';
 import { getLocale, setRequestLocale } from 'next-intl/server';
@@ -55,15 +59,30 @@ const TRANSLATIONS = {
 
 export default async function AppLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params?: Promise<{ locale: string }> | any;
 }) {
   const profile = isSupabaseConfigured() ? await getProfile() : null;
   const locale = await getLocale();
   setRequestLocale(locale);
   const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.fr;
+
+  // ── MFA mandatory enforcement (post-grace-period) ─────────────────────
+  // The user has 14 days from signup to enable TOTP. Past that, any visit
+  // to an authenticated page bounces them to /settings/security with a
+  // ?mfa-required=1 flag so the UI can show the right "you must enable"
+  // banner. We allow /settings/security itself (else infinite loop), the
+  // logout endpoint, and the deletion modal that lives on /settings/profile
+  // — Settings as a section stays free so the user can keep navigating.
+  let mfaStatus: MfaStatus | null = null;
+  if (isSupabaseConfigured() && profile) {
+    mfaStatus = await getMfaStatus();
+    const pathname = headers().get('x-pathname-stripped') ?? '';
+    const onSettings = pathname.startsWith('settings');
+    if (mfaStatus.mustEnable && !onSettings) {
+      redirect('/settings/security?mfa-required=1');
+    }
+  }
 
   return (
     <UserProvider user={profile}>
@@ -71,6 +90,12 @@ export default async function AppLayout({
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar />
+          {mfaStatus && !mfaStatus.enabled && (
+            <MfaBanner
+              daysRemaining={mfaStatus.daysRemaining}
+              mustEnable={mfaStatus.mustEnable}
+            />
+          )}
           <TrialWarningBanner profile={profile} t={t} />
           {!isSupabaseConfigured() && <BackendNotConfiguredBanner t={t} />}
           <main className="flex-1 pb-24 lg:pb-8 overflow-x-hidden">{children}</main>

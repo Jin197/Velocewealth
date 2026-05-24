@@ -33,6 +33,13 @@ export async function middleware(request: NextRequest) {
   const stripped = stripLocale(path);
   const firstSeg = stripped.split('/')[0] ?? '';
 
+  // Expose the path to downstream Server Components / layouts via a request
+  // header — needed by app/(app)/layout.tsx to enforce the MFA-mandatory
+  // redirect only when the user isn't already on /settings/security.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', path);
+  requestHeaders.set('x-pathname-stripped', stripped);
+
   // ── OAuth stray-payload safety net ────────────────────────────────────
   // If Supabase redirects an OAuth response (?code=... or ?error=...) to
   // anywhere other than /auth/callback (typically because the Redirect URL
@@ -59,20 +66,43 @@ export async function middleware(request: NextRequest) {
     if (authResponse.headers.get('location')) {
       return authResponse;
     }
-    // Then run i18n on the same request to add locale prefix if needed.
-    const response = intlMiddleware(request);
-    // Protect authenticated pages from browser back-button leak after logout:
-    // no-store prevents the browser from serving the page from its history
-    // cache once the user has signed out. Applied only to protected routes;
-    // public pages (landing, pricing) stay cacheable.
+
+    // Delegate to next-intl. If it wants to redirect (e.g. add a locale
+    // prefix) we honor that immediately — we'd lose nothing by appending
+    // x-pathname to a 307 response since RSC isn't invoked.
+    const intlResponse = intlMiddleware(request);
+    if (intlResponse.headers.get('location')) {
+      return intlResponse;
+    }
+
+    // Build the response that actually renders the page. The `request.headers`
+    // option is what Next.js forwards to Server Components, so x-pathname
+    // becomes readable via `headers().get('x-pathname')` in any RSC tree.
+    const response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    // Preserve any cookies / response headers next-intl set (NEXT_LOCALE etc.)
+    intlResponse.headers.forEach((value, key) => {
+      response.headers.set(key, value);
+    });
     if (isProtected) {
       applyNoStoreHeaders(response);
     }
     return response;
   }
 
-  // Public routes: only run i18n
-  return intlMiddleware(request);
+  // Public routes: only run i18n, but still expose the path to RSC.
+  const intlResponse = intlMiddleware(request);
+  if (intlResponse.headers.get('location')) {
+    return intlResponse;
+  }
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  intlResponse.headers.forEach((value, key) => {
+    response.headers.set(key, value);
+  });
+  return response;
 }
 
 function applyNoStoreHeaders(response: NextResponse) {
