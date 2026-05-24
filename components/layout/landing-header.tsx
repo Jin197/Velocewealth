@@ -6,6 +6,7 @@ import { Logo } from '@/components/layout/logo';
 import { Button } from '@/components/ui/button';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { useLocale } from 'next-intl';
+import { HelpCircle } from 'lucide-react';
 
 interface LandingHeaderProps {
   tNav: {
@@ -67,6 +68,13 @@ export function LandingHeader({ tNav }: LandingHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/help"
+            title={tNav.partners}
+            className="text-muted-foreground hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/5 shrink-0 flex items-center justify-center"
+          >
+            <HelpCircle className="h-4.5 w-4.5" strokeWidth={1.8} />
+          </Link>
           <LocaleSwitcher />
           <Button
             variant="ghost"
