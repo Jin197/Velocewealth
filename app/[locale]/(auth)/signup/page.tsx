@@ -75,16 +75,21 @@ export default function SignupPage() {
           </svg>
           {t('loginCta')} Google
         </Button>
-        <Button
-          variant="outline"
-          className="w-full"
-          size="lg"
-          onClick={() => handleOAuth('apple')}
-          disabled={pending}
-        >
-          <Apple className="h-4 w-4" />
-          {t('loginCta')} Apple
-        </Button>
+        {/* Apple Sign In: gated behind NEXT_PUBLIC_APPLE_ENABLED until the
+            Apple Developer account + Services ID + p8 key are wired up in
+            Supabase Auth. Re-enable by setting the env var to 'true'. */}
+        {process.env.NEXT_PUBLIC_APPLE_ENABLED === 'true' && (
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() => handleOAuth('apple')}
+            disabled={pending}
+          >
+            <Apple className="h-4 w-4" />
+            {t('loginCta')} Apple
+          </Button>
+        )}
       </div>
 
       <div className="relative">

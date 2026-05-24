@@ -316,16 +316,22 @@ export default function LoginPage() {
           </svg>
           {t('loginCta')} Google
         </Button>
-        <Button
-          variant="outline"
-          className="w-full"
-          size="lg"
-          onClick={() => handleOAuth('apple')}
-          disabled={pending}
-        >
-          <Apple className="h-4 w-4" />
-          {t('loginCta')} Apple
-        </Button>
+        {/* Apple Sign In: requires an Apple Developer account (99 $/y) and a
+            configured Services ID + p8 key in Supabase. Hidden until then via
+            NEXT_PUBLIC_APPLE_ENABLED. To re-enable: set the env var to 'true'
+            in Vercel and configure the provider in Supabase Auth → Providers. */}
+        {process.env.NEXT_PUBLIC_APPLE_ENABLED === 'true' && (
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() => handleOAuth('apple')}
+            disabled={pending}
+          >
+            <Apple className="h-4 w-4" />
+            {t('loginCta')} Apple
+          </Button>
+        )}
       </div>
 
       <div className="relative">
