@@ -3,7 +3,7 @@
 import { Link } from '@/lib/i18n/routing';
 import { useState, useTransition } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Mail, Lock, User, Globe, Loader2, Apple, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Globe, Loader2, Apple, Eye, EyeOff, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
@@ -17,6 +17,17 @@ export default function SignupPage() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState('');
+
+  // Live rule evaluation — matches lib/validators/password.ts exactly.
+  // We display each rule below the input and color the satisfied ones green
+  // so the user gets immediate, granular feedback as they type.
+  const rules = [
+    { id: 'length', ok: password.length >= 10, label: t('passwordRuleLength') },
+    { id: 'upper', ok: /[A-Z]/.test(password), label: t('passwordRuleUpper') },
+    { id: 'lower', ok: /[a-z]/.test(password), label: t('passwordRuleLower') },
+    { id: 'digit', ok: /[0-9]/.test(password), label: t('passwordRuleDigit') },
+  ] as const;
 
   const handleSubmit = (formData: FormData) => {
     formData.set('locale', locale);
@@ -125,7 +136,9 @@ export default function SignupPage() {
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
-              placeholder={t('passwordHint')}
+              placeholder={t('passwordPlaceholder')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="ps-9 pe-10"
               required
               minLength={10}
@@ -150,6 +163,28 @@ export default function SignupPage() {
               )}
             </button>
           </div>
+          <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+            {rules.map((r) => (
+              <li
+                key={r.id}
+                className={
+                  r.ok
+                    ? 'flex items-center gap-1.5 text-eco transition-colors'
+                    : 'flex items-center gap-1.5 text-muted-foreground transition-colors'
+                }
+              >
+                <Check
+                  className={
+                    r.ok
+                      ? 'h-3 w-3 shrink-0'
+                      : 'h-3 w-3 shrink-0 opacity-40'
+                  }
+                  strokeWidth={r.ok ? 3 : 2}
+                />
+                {r.label}
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
