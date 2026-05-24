@@ -167,24 +167,13 @@ export function LandingPageClient({ locale }: { locale: string }) {
         </div>
 
         <div className="container relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <Badge className="bg-[#2D2D2D] hover:bg-[#2D2D2D] text-[#007AFF] border border-[#007AFF]/30 rounded-full px-4 py-1 text-xs font-mono tracking-wider uppercase">
-              🚀 SYSTEM READY // {locale.toUpperCase()}
-            </Badge>
-            
+          <div className="space-y-8">
             <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.98] text-white">
               {t('titleLead')}<br />
               <span className="font-serif italic font-normal text-gradient-veloce bg-gradient-to-r from-[#007AFF] via-cyan-400 to-indigo-400">
                 {t('titleHighlight')}
               </span>
             </h1>
-            
-            <p className="text-lg text-muted-foreground max-w-xl font-sans leading-relaxed">
-              <span className="text-[#007AFF] font-semibold block mb-1.5 tracking-wide uppercase text-sm font-mono">
-                ⚡ {tCommon('tagline')}.
-              </span>
-              {t('subtitle')}
-            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button

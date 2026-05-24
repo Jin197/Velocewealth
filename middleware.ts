@@ -60,11 +60,28 @@ export async function middleware(request: NextRequest) {
       return authResponse;
     }
     // Then run i18n on the same request to add locale prefix if needed.
-    return intlMiddleware(request);
+    const response = intlMiddleware(request);
+    // Protect authenticated pages from browser back-button leak after logout:
+    // no-store prevents the browser from serving the page from its history
+    // cache once the user has signed out. Applied only to protected routes;
+    // public pages (landing, pricing) stay cacheable.
+    if (isProtected) {
+      applyNoStoreHeaders(response);
+    }
+    return response;
   }
 
   // Public routes: only run i18n
   return intlMiddleware(request);
+}
+
+function applyNoStoreHeaders(response: NextResponse) {
+  response.headers.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+  );
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
 }
 
 export const config = {

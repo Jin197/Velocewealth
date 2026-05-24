@@ -1,6 +1,7 @@
 import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isSupabaseConfigured } from '@/lib/env';
+import { resolveGeoLocation, formatLocation } from './geoip';
 
 interface NotifyOpts {
   userId: string;
@@ -68,8 +69,11 @@ async function sendNewDeviceEmail(
   from: string,
   opts: NotifyOpts,
 ): Promise<void> {
+  // GeoIP resolution is best-effort (timeout 1s, fail-open). If it fails the
+  // email still goes out with only the IP — better than skipping the alert.
+  const geo = await resolveGeoLocation(opts.ip);
   const subject = subjectFor(opts.locale);
-  const html = htmlBody(opts);
+  const html = htmlBody(opts, formatLocation(geo));
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -100,7 +104,7 @@ function subjectFor(locale: string): string {
   }
 }
 
-function htmlBody(opts: NotifyOpts): string {
+function htmlBody(opts: NotifyOpts, location: string | null): string {
   const name = opts.fullName ?? opts.email.split('@')[0] ?? 'utilisateur';
   const when = new Date().toLocaleString(opts.locale, {
     dateStyle: 'long',
@@ -108,12 +112,16 @@ function htmlBody(opts: NotifyOpts): string {
   });
   const ua = escapeHtml(opts.userAgent);
   const ip = escapeHtml(opts.ip);
+  const locationRow = location
+    ? `<tr><td style="padding:4px 12px 4px 0;color:#666">Lieu approximatif</td><td>${escapeHtml(location)}</td></tr>`
+    : '';
   return `
     <div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;color:#111">
       <h2 style="font-size:18px">Bonjour ${escapeHtml(name)},</h2>
       <p>Une nouvelle connexion a été détectée sur votre compte Velocewealth.</p>
       <table style="border-collapse:collapse;margin:16px 0">
         <tr><td style="padding:4px 12px 4px 0;color:#666">Date</td><td>${escapeHtml(when)}</td></tr>
+        ${locationRow}
         <tr><td style="padding:4px 12px 4px 0;color:#666">IP</td><td>${ip}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#666">Appareil</td><td>${ua}</td></tr>
       </table>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { Link, usePathname } from '@/lib/i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
 import {
@@ -13,7 +13,6 @@ import {
   Sparkles,
   LogOut,
 } from 'lucide-react';
-import { logoutAction } from '@/server/actions/auth';
 import { Logo } from './logo';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -57,11 +56,16 @@ export function Sidebar() {
   const tSidebar = SIDEBAR_TRANSLATIONS[locale as keyof typeof SIDEBAR_TRANSLATIONS] || SIDEBAR_TRANSLATIONS.fr;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loggingOut, startLogout] = useTransition();
+  // Hidden form whose POST submit lets the browser follow the 303 redirect
+  // emitted by /api/auth/logout. This is what makes the response's
+  // `Clear-Site-Data` header actually take effect (it requires a navigation,
+  // not just a fetch result).
+  const logoutFormRef = useRef<HTMLFormElement>(null);
 
   const handleLogoutConfirm = () => {
     setShowLogoutConfirm(false);
-    startLogout(async () => {
-      await logoutAction();
+    startLogout(() => {
+      logoutFormRef.current?.submit();
     });
   };
 
@@ -203,6 +207,14 @@ export function Sidebar() {
         cancelLabel={t('logoutCancel')}
         onConfirm={handleLogoutConfirm}
         onCancel={() => setShowLogoutConfirm(false)}
+      />
+
+      <form
+        ref={logoutFormRef}
+        action="/api/auth/logout"
+        method="POST"
+        className="hidden"
+        aria-hidden="true"
       />
     </aside>
   );
