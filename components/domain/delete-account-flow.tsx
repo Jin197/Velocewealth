@@ -20,7 +20,7 @@ import {
   getAccountDeletionPreviewAction,
 } from '@/server/actions/gdpr';
 import { logoutAction } from '@/server/actions/auth';
-import { CONFIRMATION_PHRASES } from '@/lib/security/account-deletion';
+import { CONFIRMATION_PHRASES } from '@/lib/security/account-deletion-phrases';
 
 type Stats = {
   vehicles: number;

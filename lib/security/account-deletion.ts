@@ -1,6 +1,15 @@
 import 'server-only';
 import crypto from 'crypto';
 
+// Re-export the shareable constants so server-side callers can still pull
+// everything from a single module (the client side must import them from
+// `./account-deletion-phrases` directly because this file is server-only).
+export {
+  CONFIRMATION_PHRASES,
+  isValidConfirmationPhrase,
+  type ConfirmationLocale,
+} from './account-deletion-phrases';
+
 /**
  * Account-deletion OTP lifecycle helpers.
  *
@@ -49,31 +58,3 @@ export function otpExpiresAt(): string {
 }
 
 export const OTP_VALIDITY_MINUTES = OTP_TTL_MINUTES;
-
-/**
- * Locale-aware "DELETE my account forever" phrase the user must type
- * verbatim to confirm. Stored here (not in messages JSON) because changing
- * its wording requires also updating consumers explicitly — i18n drift
- * would be a security bug.
- */
-export const CONFIRMATION_PHRASES = {
-  fr: 'SUPPRIMER DEFINITIVEMENT MON COMPTE',
-  en: 'DELETE MY ACCOUNT PERMANENTLY',
-  es: 'ELIMINAR MI CUENTA DEFINITIVAMENTE',
-  ar: 'حذف حسابي نهائياً',
-  pt: 'EXCLUIR MINHA CONTA PERMANENTEMENTE',
-} as const;
-
-export type ConfirmationLocale = keyof typeof CONFIRMATION_PHRASES;
-
-/**
- * True when `input` matches the expected phrase for any of our locales —
- * lenient on whitespace, strict on the rest. We accept any locale so a
- * French speaker using the EN UI doesn't get blocked by a copy-paste.
- */
-export function isValidConfirmationPhrase(input: string): boolean {
-  const normalized = input.trim().replace(/\s+/g, ' ');
-  return Object.values(CONFIRMATION_PHRASES).some(
-    (phrase) => phrase === normalized,
-  );
-}
