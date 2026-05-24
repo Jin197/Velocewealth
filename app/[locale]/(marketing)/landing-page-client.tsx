@@ -166,7 +166,7 @@ export function LandingPageClient({ locale }: { locale: string }) {
           <div className="absolute inset-0 opacity-[0.03] bg-[size:30px_30px] bg-[linear-gradient(to_right,gray_1px,transparent_1px),linear-gradient(to_bottom,gray_1px,transparent_1px)]" />
         </div>
 
-        <div className="container relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.98] text-white">
               {t('titleLead')}<br />

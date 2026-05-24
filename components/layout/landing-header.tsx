@@ -5,6 +5,7 @@ import { Link } from '@/lib/i18n/routing';
 import { Logo } from '@/components/layout/logo';
 import { Button } from '@/components/ui/button';
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { useLocale } from 'next-intl';
 
 interface LandingHeaderProps {
   tNav: {
@@ -18,6 +19,7 @@ interface LandingHeaderProps {
 
 export function LandingHeader({ tNav }: LandingHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
+  const locale = useLocale();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -77,9 +79,16 @@ export function LandingHeader({ tNav }: LandingHeaderProps) {
           <Button
             size="sm"
             asChild
-            className="bg-[#007AFF] hover:bg-[#007AFF]/90 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(0,122,255,0.4)] hover:shadow-[0_0_25px_rgba(0,122,255,0.6)] transition-all duration-300"
+            className="bg-[#007AFF] hover:bg-[#007AFF]/90 text-white rounded-full font-semibold shadow-[0_0_20px_rgba(0,122,255,0.4)] hover:shadow-[0_0_25px_rgba(0,122,255,0.6)] transition-all duration-300 px-3 sm:px-4 shrink-0"
           >
-            <Link href="/signup">{tNav.signup}</Link>
+            <Link href="/signup">
+              <span className="inline sm:hidden">
+                {locale === 'fr' ? 'Essayer' : locale === 'es' ? 'Probar' : locale === 'ar' ? 'ابدأ' : locale === 'pt' ? 'Testar' : 'Try'}
+              </span>
+              <span className="hidden sm:inline">
+                {tNav.signup}
+              </span>
+            </Link>
           </Button>
         </div>
       </div>

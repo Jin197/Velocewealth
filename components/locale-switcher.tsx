@@ -41,7 +41,8 @@ export function LocaleSwitcher({ variant = 'compact' }: Props) {
           onChange={(e) => handleChange(e.target.value as Locale)}
           disabled={pending}
           className={cn(
-            'appearance-none rounded-btn border border-border bg-card pl-7 pr-7 py-1.5 text-xs font-medium cursor-pointer',
+            'appearance-none rounded-btn border border-border bg-card pl-7 pr-3 sm:pr-7 py-1.5 text-xs font-medium cursor-pointer',
+            'w-[46px] sm:w-auto overflow-hidden transition-all duration-300',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )}
         >
