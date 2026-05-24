@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Key, AlertTriangle, Download, Trash2 } from 'lucide-react';
+import { Key, AlertTriangle, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
-import { Confirm } from '@/components/ui/confirm';
-import { exportUserDataAction, deleteAccountAction } from '@/server/actions/gdpr';
-import { logoutAction } from '@/server/actions/auth';
+import { exportUserDataAction } from '@/server/actions/gdpr';
 import { useLocale } from 'next-intl';
 import { MfaSection } from '@/components/domain/mfa-section';
 import { TrustedDevicesSection } from '@/components/domain/trusted-devices-section';
+import { DeleteAccountFlow } from '@/components/domain/delete-account-flow';
 
 const TRANSLATIONS = {
   fr: {
@@ -174,9 +173,7 @@ export default function SecurityPage() {
   const locale = useLocale();
   const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.fr;
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isExporting, startExport] = useTransition();
-  const [isDeleting, startDelete] = useTransition();
 
   const handleExport = () => {
     startExport(async () => {
@@ -199,21 +196,8 @@ export default function SecurityPage() {
     });
   };
 
-  const handleDeleteConfirm = () => {
-    setShowDeleteConfirm(false);
-    startDelete(async () => {
-      try {
-        const result = await deleteAccountAction();
-        if (result.ok) {
-          await logoutAction();
-        } else {
-          alert(result.error || t.deleteError);
-        }
-      } catch (err) {
-        alert(t.deleteGenericError);
-      }
-    });
-  };
+  // Legacy single-click delete removed — secure 3-factor flow is now in
+  // the <DeleteAccountFlow /> component rendered in the data card below.
 
   return (
     <div className="space-y-6">
@@ -256,14 +240,7 @@ export default function SecurityPage() {
           <Button variant="outline" onClick={handleExport} disabled={isExporting}>
             <Download className="h-4 w-4" /> {isExporting ? t.exporting : t.exportData}
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive border-destructive/40 hover:bg-destructive/10"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-4 w-4" /> {isDeleting ? t.deleting : t.deleteAccount}
-          </Button>
+          <DeleteAccountFlow />
         </div>
       </Card>
 
@@ -279,16 +256,6 @@ export default function SecurityPage() {
         </div>
       </Card>
 
-      <Confirm
-        open={showDeleteConfirm}
-        title={t.deleteConfirmTitle}
-        description={t.deleteConfirmDesc}
-        confirmLabel={t.deleteConfirmLabel}
-        cancelLabel={t.cancelDeleteLabel}
-        destructive
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
     </div>
   );
 }

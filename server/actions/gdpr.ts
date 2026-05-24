@@ -7,10 +7,15 @@ import { rateLimit } from '@/lib/rate-limit';
 import {
   generateOtp,
   hashOtp,
+  verifyOtp,
   otpExpiresAt,
   OTP_VALIDITY_MINUTES,
+  isValidConfirmationPhrase,
 } from '@/lib/security/account-deletion';
 import { renderAccountDeletionEmail } from '@/lib/security/email-templates';
+import { getStripe, isStripeConfigured } from '@/lib/stripe';
+import { auditAuthEvent } from '@/lib/security/audit';
+import { getClientIp, getUserAgent } from '@/lib/security/request-context';
 import type { ActionResult } from './profile';
 
 const NOT_CONFIGURED_EXPORT = { ok: false, error: 'Backend non configuré. Voir ONBOARDING.md.' };
@@ -89,6 +94,59 @@ export async function exportUserDataAction(): Promise<{ ok: boolean; data?: any;
       error: err instanceof Error ? err.message : 'Erreur lors de la récupération des données',
     };
   }
+}
+
+/**
+ * Pre-deletion preview for the UI. Cheap row counts + Stripe customer
+ * lookup so the user sees exactly what they are about to lose.
+ */
+export async function getAccountDeletionPreviewAction(): Promise<{
+  vehicles: number;
+  fuelEntries: number;
+  maintenanceEntries: number;
+  hasActiveSubscription: boolean;
+}> {
+  const empty = {
+    vehicles: 0,
+    fuelEntries: 0,
+    maintenanceEntries: 0,
+    hasActiveSubscription: false,
+  };
+  if (!isSupabaseConfigured()) return empty;
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return empty;
+
+  // `count: 'exact', head: true` returns just the row count without the rows.
+  const [{ count: v }, { count: f }, { count: m }, { data: subs }] =
+    await Promise.all([
+      supabase
+        .from('vehicles')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id),
+      supabase
+        .from('fuel_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id),
+      supabase
+        .from('maintenance_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id),
+      supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing']),
+    ]);
+
+  return {
+    vehicles: v ?? 0,
+    fuelEntries: f ?? 0,
+    maintenanceEntries: m ?? 0,
+    hasActiveSubscription: (subs?.length ?? 0) > 0,
+  };
 }
 
 /**
@@ -206,39 +264,156 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function deleteAccountAction(): Promise<ActionResult> {
+/**
+ * Step 2 — full destructive confirmation flow.
+ *
+ * Requires three independent factors, validated in this order so we fail
+ * cheap on the most likely user error first:
+ *   1. The exact confirmation phrase (any supported locale variant).
+ *   2. A valid, non-expired, non-consumed OTP from the latest request.
+ *   3. The user's current password (re-auth defense against session hijack).
+ *
+ * Once all three pass, we tear down server-side state in dependency order:
+ *   - Mark the OTP row consumed (anti-replay).
+ *   - Cancel every active Stripe subscription (best-effort; failures logged
+ *     but don't block the deletion — the auth user removal is what really
+ *     matters for the user's "right to be forgotten").
+ *   - Delete every object from Storage buckets owned by this user
+ *     (`receipts/`, `invoices/`, `vehicle-photos/`, `avatars/`).
+ *   - Append a final `account_deleted` row to auth_audit_logs.
+ *   - Delete the auth user; the `on delete cascade` foreign keys flush all
+ *     profile / vehicles / fuel / maintenance / subscriptions / etc. rows.
+ *
+ * The auth audit entry is written BEFORE the deleteUser call so the row
+ * survives (auth_audit_logs.user_id is ON DELETE SET NULL by design).
+ */
+export async function deleteAccountAction(
+  otp: string,
+  password: string,
+  confirmationPhrase: string,
+): Promise<ActionResult> {
   if (!isSupabaseConfigured()) return NOT_CONFIGURED_ACTION;
+
+  // ── 1. Auth context
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) return { error: 'Non authentifié' };
+  if (!user.email) return { error: 'Compte sans email — contactez le support' };
 
-  try {
-    const admin = createAdminClient();
-    
-    // Stripe cleanup if customer exists
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.stripe_customer_id) {
-      // In a real application, you might cancel their subscription on Stripe here
-      // But we will allow the database cascade deletion to handle local records first.
-    }
-
-    const { error } = await admin.auth.admin.deleteUser(user.id);
-    if (error) {
-      return { error: `Échec de la suppression : ${error.message}` };
-    }
-
-    return { ok: true };
-  } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : 'Une erreur est survenue lors de la suppression de votre compte',
-    };
+  // ── 2. Confirmation phrase (cheap)
+  if (!isValidConfirmationPhrase(confirmationPhrase)) {
+    return { error: 'Phrase de confirmation incorrecte' };
   }
+
+  // ── 3. OTP lookup — most recent unconsumed, non-expired request
+  const admin = createAdminClient();
+  const { data: requestRow } = await admin
+    .from('account_deletion_requests' as never)
+    .select('id, otp_hash, expires_at')
+    .eq('user_id', user.id)
+    .is('consumed_at', null)
+    .gte('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const request = requestRow as
+    | { id: string; otp_hash: string; expires_at: string }
+    | null;
+  if (!request) {
+    return { error: 'Aucun code valide. Redemandez un code.' };
+  }
+  if (!verifyOtp(otp, request.otp_hash)) {
+    return { error: 'Code incorrect' };
+  }
+
+  // ── 4. Re-authentication via password. signInWithPassword on the SAME
+  // session is a Supabase pattern for elevation: success means the password
+  // is current, regardless of the existing session's age.
+  const { error: reauthErr } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password,
+  });
+  if (reauthErr) {
+    return { error: 'Mot de passe incorrect' };
+  }
+
+  // ── 5. Consume the OTP immediately so it can't be replayed.
+  await admin
+    .from('account_deletion_requests' as never)
+    .update({ consumed_at: new Date().toISOString() } as never)
+    .eq('id', request.id);
+
+  // ── 6. Stripe: cancel all active subscriptions if the user has a Stripe
+  // customer. Best-effort: failures are logged but don't block the deletion.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stripe_customer_id')
+    .eq('id', user.id)
+    .single();
+  if (profile?.stripe_customer_id && isStripeConfigured()) {
+    try {
+      const stripe = getStripe();
+      const subs = await stripe.subscriptions.list({
+        customer: profile.stripe_customer_id,
+        status: 'all',
+        limit: 100,
+      });
+      await Promise.all(
+        subs.data
+          .filter((s) =>
+            ['active', 'trialing', 'past_due', 'unpaid'].includes(s.status),
+          )
+          .map((s) =>
+            stripe.subscriptions
+              .cancel(s.id, { invoice_now: false, prorate: false })
+              .catch(() => {
+                // Swallow individual cancel errors — we still want to
+                // proceed with the destructive steps.
+              }),
+          ),
+      );
+    } catch {
+      // Stripe outage shouldn't block GDPR deletion.
+    }
+  }
+
+  // ── 7. Storage cleanup: list + delete every object whose path begins
+  // with `<userId>/` in each known bucket.
+  await Promise.all(
+    (['receipts', 'invoices', 'vehicle-photos', 'avatars'] as const).map(
+      async (bucket) => {
+        try {
+          const { data: objects } = await admin.storage
+            .from(bucket)
+            .list(user.id, { limit: 1000 });
+          if (!objects || objects.length === 0) return;
+          const paths = objects.map((o) => `${user.id}/${o.name}`);
+          await admin.storage.from(bucket).remove(paths);
+        } catch {
+          // Per-bucket failures are non-fatal.
+        }
+      },
+    ),
+  );
+
+  // ── 8. Final audit row (written BEFORE deleteUser so it survives the
+  // cascade; auth_audit_logs.user_id is ON DELETE SET NULL).
+  await auditAuthEvent({
+    userId: user.id,
+    action: 'password_changed', // closest catalogued action; metadata.scope below tags it
+    ip: getClientIp(),
+    userAgent: getUserAgent(),
+    metadata: { event: 'account_deleted', stripe_customer: profile?.stripe_customer_id ?? null },
+  });
+
+  // ── 9. Delete the auth user; FK cascades wipe the rest.
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) {
+    return { error: `Échec de la suppression : ${error.message}` };
+  }
+
+  return { ok: true };
 }

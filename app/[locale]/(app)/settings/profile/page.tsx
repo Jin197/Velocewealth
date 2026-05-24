@@ -12,8 +12,7 @@ import { FormError } from '@/components/ui/form-error';
 import { Confirm } from '@/components/ui/confirm';
 import { useUser } from '@/components/user-context';
 import { updateProfileAction } from '@/server/actions/profile';
-import { deleteAccountAction } from '@/server/actions/gdpr';
-import { logoutAction } from '@/server/actions/auth';
+import { DeleteAccountFlow } from '@/components/domain/delete-account-flow';
 import { getCurrenciesByRegion } from '@/lib/currencies';
 import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from '@/lib/i18n/routing';
@@ -234,22 +233,8 @@ export default function ProfileSettingsPage() {
     });
   };
 
-  const handleDeleteConfirm = () => {
-    setShowDeleteConfirm(false);
-    startDelete(async () => {
-      try {
-        const result = await deleteAccountAction();
-        if (result.ok) {
-          toast.success(t.deleteSuccess);
-          await logoutAction();
-        } else {
-          toast.error(result.error || t.deleteError);
-        }
-      } catch (err) {
-        toast.error(t.deleteGenericError);
-      }
-    });
-  };
+  // Legacy single-click delete removed — the secure 3-factor flow lives in
+  // <DeleteAccountFlow /> which renders its own button + modal below.
 
   return (
     <div className="space-y-6">
@@ -356,7 +341,7 @@ export default function ProfileSettingsPage() {
         </div>
       </form>
 
-      {/* Danger Zone for Account Deletion */}
+      {/* Danger Zone — secure 3-factor account deletion (OTP + password + phrase) */}
       <Card className="p-6 border border-destructive/20 bg-destructive/5 space-y-4 rounded-card">
         <div className="flex items-start gap-3 text-sm">
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" strokeWidth={1.5} />
@@ -368,29 +353,9 @@ export default function ProfileSettingsPage() {
           </div>
         </div>
         <div className="flex justify-start">
-          <Button
-            type="button"
-            variant="outline"
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-semibold rounded-full flex items-center gap-1.5"
-            onClick={() => setShowDeleteConfirm(true)}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            {isDeleting ? t.deleting : t.deleteAccountBtn}
-          </Button>
+          <DeleteAccountFlow />
         </div>
       </Card>
-
-      <Confirm
-        open={showDeleteConfirm}
-        title={t.deleteConfirmTitle}
-        description={t.deleteConfirmDesc}
-        confirmLabel={t.deleteConfirmLabel}
-        cancelLabel={t.cancelDeleteLabel}
-        destructive
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
     </div>
   );
 }
