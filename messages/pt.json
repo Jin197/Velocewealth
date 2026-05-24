@@ -54,7 +54,7 @@
     "emailPlaceholder": "voce@exemplo.com",
     "passwordLabel": "Palavra-passe",
     "passwordPlaceholder": "••••••••",
-    "passwordHint": "Pelo menos 6 caracteres",
+    "passwordHint": "10+ caracteres · 1 maiúscula · 1 minúscula · 1 dígito",
     "fullNameLabel": "Nome completo",
     "fullNamePlaceholder": "Aïcha Diallo",
     "countryLabel": "País",

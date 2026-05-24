@@ -2,9 +2,16 @@
 
 import { Link } from '@/lib/i18n/routing';
 import { useState, useTransition, useRef, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { Mail, Lock, Apple, Loader2, ShieldCheck } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  Apple,
+  Loader2,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { Button } from '@/components/ui/button';
@@ -101,26 +108,35 @@ const OAUTH_ERROR_LABELS: Record<
 export default function LoginPage() {
   const t = useTranslations('auth');
   const rawLocale = useLocale();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const mfaLabels =
     MFA_LOGIN_LABELS[rawLocale as keyof typeof MFA_LOGIN_LABELS] ?? MFA_LOGIN_LABELS.fr;
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
+  const [showPassword, setShowPassword] = useState(false);
 
   // Surface OAuth-callback errors (?error=oauth_replay etc.) as a toast,
   // then strip the query string so a hard refresh doesn't re-trigger it.
+  // We read window.location directly (not useSearchParams) to avoid forcing
+  // the whole page into dynamic rendering — that was crashing in production
+  // with "Application error: a client-side exception has occurred".
   useEffect(() => {
-    const oauthError = searchParams.get('error');
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const oauthError = params.get('error');
     if (!oauthError) return;
-    const localeKey = rawLocale as keyof typeof MFA_LOGIN_LABELS;
-    const msg =
-      OAUTH_ERROR_LABELS[oauthError]?.[localeKey] ??
-      OAUTH_ERROR_LABELS[oauthError]?.fr ??
-      OAUTH_ERROR_LABELS.auth.fr!;
-    toast.error(msg);
+    try {
+      const localeKey = rawLocale as keyof typeof MFA_LOGIN_LABELS;
+      const msg =
+        OAUTH_ERROR_LABELS[oauthError]?.[localeKey] ??
+        OAUTH_ERROR_LABELS[oauthError]?.fr ??
+        OAUTH_ERROR_LABELS.auth?.fr ??
+        'Erreur de connexion';
+      toast.error(msg);
+    } catch {
+      toast.error('Erreur de connexion');
+    }
     // Clean URL without re-rendering the route stack.
-    router.replace(window.location.pathname);
+    window.history.replaceState({}, '', window.location.pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
@@ -353,12 +369,30 @@ export default function LoginPage() {
             <Input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder={t('passwordPlaceholder')}
-              className="ps-9"
+              className="ps-9 pe-10"
               required
               disabled={pending}
+              autoComplete="current-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              tabIndex={-1}
+              aria-label={
+                showPassword
+                  ? 'Masquer le mot de passe'
+                  : 'Afficher le mot de passe'
+              }
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+              ) : (
+                <Eye className="h-4 w-4" strokeWidth={1.5} />
+              )}
+            </button>
           </div>
         </div>
         <FormError message={error} />

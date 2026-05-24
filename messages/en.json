@@ -54,7 +54,7 @@
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "passwordPlaceholder": "••••••••",
-    "passwordHint": "At least 6 characters",
+    "passwordHint": "10+ chars · 1 uppercase · 1 lowercase · 1 digit",
     "fullNameLabel": "Full name",
     "fullNamePlaceholder": "Aïcha Diallo",
     "countryLabel": "Country",

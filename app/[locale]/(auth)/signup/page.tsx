@@ -3,7 +3,7 @@
 import { Link } from '@/lib/i18n/routing';
 import { useState, useTransition } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Mail, Lock, User, Globe, Loader2, Apple } from 'lucide-react';
+import { Mail, Lock, User, Globe, Loader2, Apple, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
@@ -16,6 +16,7 @@ export default function SignupPage() {
   const locale = useLocale();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (formData: FormData) => {
     formData.set('locale', locale);
@@ -123,13 +124,31 @@ export default function SignupPage() {
             <Input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder={t('passwordHint')}
-              className="ps-9"
+              className="ps-9 pe-10"
               required
-              minLength={6}
+              minLength={10}
               disabled={pending}
+              autoComplete="new-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              tabIndex={-1}
+              aria-label={
+                showPassword
+                  ? 'Masquer le mot de passe'
+                  : 'Afficher le mot de passe'
+              }
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+              ) : (
+                <Eye className="h-4 w-4" strokeWidth={1.5} />
+              )}
+            </button>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
