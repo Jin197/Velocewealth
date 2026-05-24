@@ -97,7 +97,7 @@ const LABELS: Record<
     sending: 'Envoi...',
     step2Heading: 'Confirmer la suppression',
     step2Subtitle:
-      'Saisissez le code à 6 chiffres reçu par email, votre mot de passe actuel, et la phrase de confirmation exacte.',
+      'Saisissez le code à 6 chiffres reçu par email et la phrase de confirmation exacte.',
     otpLabel: 'Code reçu par email (6 chiffres)',
     passwordLabel: 'Votre mot de passe actuel',
     phraseLabel: (p) => `Tapez exactement : ${p}`,
@@ -140,7 +140,7 @@ const LABELS: Record<
     sending: 'Sending...',
     step2Heading: 'Confirm deletion',
     step2Subtitle:
-      'Enter the 6-digit code received by email, your current password, and the exact confirmation phrase.',
+      'Enter the 6-digit code received by email and the exact confirmation phrase.',
     otpLabel: '6-digit code from email',
     passwordLabel: 'Your current password',
     phraseLabel: (p) => `Type exactly: ${p}`,
@@ -182,7 +182,7 @@ const LABELS: Record<
     sending: 'Enviando...',
     step2Heading: 'Confirmar eliminación',
     step2Subtitle:
-      'Introduce el código de 6 dígitos recibido por correo, tu contraseña actual y la frase de confirmación exacta.',
+      'Introduce el código de 6 dígitos recibido por correo y la frase de confirmación exacta.',
     otpLabel: 'Código de 6 dígitos del correo',
     passwordLabel: 'Tu contraseña actual',
     phraseLabel: (p) => `Escribe exactamente: ${p}`,
@@ -225,7 +225,7 @@ const LABELS: Record<
     sending: 'جاري الإرسال...',
     step2Heading: 'تأكيد الحذف',
     step2Subtitle:
-      'أدخل الرمز المكوّن من 6 أرقام الذي وصلك بالبريد، وكلمة المرور الحالية، وعبارة التأكيد بدقة.',
+      'أدخل الرمز المكوّن من 6 أرقام الذي وصلك بالبريد وعبارة التأكيد بدقة.',
     otpLabel: 'الرمز المكوّن من 6 أرقام من البريد',
     passwordLabel: 'كلمة المرور الحالية',
     phraseLabel: (p) => `اكتب بدقة: ${p}`,
@@ -267,7 +267,7 @@ const LABELS: Record<
     sending: 'Enviando...',
     step2Heading: 'Confirmar exclusão',
     step2Subtitle:
-      'Introduza o código de 6 dígitos recebido por email, a sua palavra-passe atual e a frase de confirmação exata.',
+      'Introduza o código de 6 dígitos recebido por email e a frase de confirmação exata.',
     otpLabel: 'Código de 6 dígitos do email',
     passwordLabel: 'A sua palavra-passe atual',
     phraseLabel: (p) => `Escreva exatamente: ${p}`,
@@ -299,7 +299,6 @@ export function DeleteAccountFlow() {
 
   const [stage, setStage] = useState<Stage>('idle');
   const [otp, setOtp] = useState('');
-  const [password, setPassword] = useState('');
   const [phrase, setPhrase] = useState('');
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [pending, startTransition] = useTransition();
@@ -322,7 +321,6 @@ export function DeleteAccountFlow() {
     if (pending || stage === 'done') return;
     setStage('idle');
     setOtp('');
-    setPassword('');
     setPhrase('');
   };
 
@@ -345,11 +343,9 @@ export function DeleteAccountFlow() {
   const confirmDelete = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      const res = await deleteAccountAction(otp, password, phrase);
+      const res = await deleteAccountAction(otp, phrase);
       if ('error' in res && res.error) {
         if (res.error.includes('Code')) toast.error(t.invalidCodeToast);
-        else if (res.error.includes('Mot de passe'))
-          toast.error(t.invalidPwdToast);
         else if (res.error.includes('Phrase'))
           toast.error(t.invalidPhraseToast);
         else toast.error(res.error);
@@ -517,18 +513,6 @@ export function DeleteAccountFlow() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="del-pwd">{t.passwordLabel}</Label>
-                        <Input
-                          id="del-pwd"
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          autoComplete="current-password"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
                         <Label htmlFor="del-phrase">
                           {t.phraseLabel(expectedPhrase)}
                         </Label>
@@ -566,7 +550,6 @@ export function DeleteAccountFlow() {
                             disabled={
                               pending ||
                               otp.length !== 6 ||
-                              password.length < 6 ||
                               phrase.trim() === ''
                             }
                             className="bg-destructive hover:bg-destructive/90 text-white"

@@ -267,13 +267,17 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
 /**
  * Step 2 — full destructive confirmation flow.
  *
- * Requires three independent factors, validated in this order so we fail
+ * Requires two independent factors, validated in this order so we fail
  * cheap on the most likely user error first:
  *   1. The exact confirmation phrase (any supported locale variant).
  *   2. A valid, non-expired, non-consumed OTP from the latest request.
- *   3. The user's current password (re-auth defense against session hijack).
  *
- * Once all three pass, we tear down server-side state in dependency order:
+ * Password re-authentication was intentionally removed for UX. The trade-off:
+ * a stolen session + access to the user's email is now enough to delete
+ * their account. Email access is still the gating factor since the OTP is
+ * single-use and lasts 15 minutes.
+ *
+ * Once both pass, we tear down server-side state in dependency order:
  *   - Mark the OTP row consumed (anti-replay).
  *   - Cancel every active Stripe subscription (best-effort; failures logged
  *     but don't block the deletion — the auth user removal is what really
@@ -289,7 +293,6 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
  */
 export async function deleteAccountAction(
   otp: string,
-  password: string,
   confirmationPhrase: string,
 ): Promise<ActionResult> {
   if (!isSupabaseConfigured()) return NOT_CONFIGURED_ACTION;
@@ -327,17 +330,6 @@ export async function deleteAccountAction(
   }
   if (!verifyOtp(otp, request.otp_hash)) {
     return { error: 'Code incorrect' };
-  }
-
-  // ── 4. Re-authentication via password. signInWithPassword on the SAME
-  // session is a Supabase pattern for elevation: success means the password
-  // is current, regardless of the existing session's age.
-  const { error: reauthErr } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password,
-  });
-  if (reauthErr) {
-    return { error: 'Mot de passe incorrect' };
   }
 
   // ── 5. Consume the OTP immediately so it can't be replayed.
