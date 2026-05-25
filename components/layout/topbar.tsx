@@ -61,9 +61,9 @@ export function Topbar({ title }: { title?: string }) {
             <CircleHelp className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </Button>
-        <div className="lg:hidden ml-1">
+        <Link href="/settings/profile" className="lg:hidden ml-1 hover:scale-105 transition-transform shrink-0">
           <Avatar name={currentUser.fullName} size="sm" />
-        </div>
+        </Link>
       </div>
     </header>
   );
