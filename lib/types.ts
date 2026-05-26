@@ -25,6 +25,48 @@ export interface Vehicle {
   // Insurance
   insuranceProvider?: string;
   insuranceMonthly?: number;
+  registrationFormulaNumber?: string;
+}
+
+export type InfractionCategory =
+  | 'speeding'
+  | 'parking'
+  | 'bus_lane'
+  | 'red_light'
+  | 'phone_driving'
+  | 'seatbelt'
+  | 'alcohol'
+  | 'drugs'
+  | 'other';
+
+export type FineStatus =
+  | 'unpaid'
+  | 'paid_minored'
+  | 'paid_normal'
+  | 'paid_majored'
+  | 'paid_late_majored'
+  | 'contested'
+  | 'cancelled';
+
+export interface TrafficFine {
+  id: string;
+  userId: string;
+  vehicleId: string;
+  noticeNumber: string | null;
+  documentKey: string | null;
+  category: InfractionCategory;
+  infractionDate: string;
+  notificationDate: string;
+  status: FineStatus;
+  pointsDeducted: number;
+  amountInitial: number;
+  amountPaid: number | null;
+  paidAt: string | null;
+  source: 'manual' | 'ocr_antai';
+  rawOcrText: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FuelEntry {

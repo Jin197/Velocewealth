@@ -68,6 +68,7 @@ export type Database = {
           resale_trend: 'up' | 'down' | 'stable';
           insurance_provider: string | null;
           insurance_monthly: number | null;
+          registration_formula_number: string | null;
           archived_at: string | null;
           created_at: string;
           updated_at: string;
@@ -92,6 +93,7 @@ export type Database = {
           resale_trend?: 'up' | 'down' | 'stable';
           insurance_provider?: string | null;
           insurance_monthly?: number | null;
+          registration_formula_number?: string | null;
           archived_at?: string | null;
         };
         Update: Partial<Database['public']['Tables']['vehicles']['Insert']>;

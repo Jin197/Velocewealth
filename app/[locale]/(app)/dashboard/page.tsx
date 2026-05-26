@@ -15,6 +15,8 @@ import { AlertCard } from '@/components/domain/alert-card';
 import { FuelEntryRow } from '@/components/domain/fuel-entry-row';
 import { SpendChart } from '@/components/domain/spend-chart';
 import { EnergyMix } from '@/components/domain/energy-mix';
+import { RegulatoryKpiCard } from '@/components/domain/regulatory-kpi-card';
+import { getAllUserFines } from '@/server/actions/fines';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoButton } from '@/components/domain/demo-button';
@@ -203,7 +205,10 @@ export default async function DashboardPage({ params }: PageProps) {
     );
   }
 
-  const { profile, vehicles, fuel, maintenance, alerts } = await getDashboardData();
+  const [{ profile, vehicles, fuel, maintenance, alerts }, fines] = await Promise.all([
+    getDashboardData(),
+    getAllUserFines(),
+  ]);
 
   if (!profile || vehicles.length === 0) {
     return (
@@ -285,6 +290,13 @@ export default async function DashboardPage({ params }: PageProps) {
           icon={<Leaf className="h-4 w-4" strokeWidth={1.5} />}
         />
       </div>
+
+      <RegulatoryKpiCard
+        fines={fines}
+        totalFleetSpend={totalSpend}
+        currency={profile.currency}
+        hrefFirstVehicle={vehicles[0] ? `/vehicles/${vehicles[0].id}` : null}
+      />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-6">

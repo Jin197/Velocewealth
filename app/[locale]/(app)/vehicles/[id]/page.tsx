@@ -27,6 +27,8 @@ import {
   getActiveAlerts,
 } from '@/lib/data';
 import { computeCostPerKm, tireWearPercent } from '@/lib/computations';
+import { FineTrackerPanel } from '@/components/domain/fine-tracker-panel';
+import { getVehicleFines } from '@/server/actions/fines';
 import { formatCurrency, formatDistance, formatDate } from '@/lib/utils';
 import { isSupabaseConfigured } from '@/lib/env';
 
@@ -39,11 +41,12 @@ export default async function VehicleDetailPage({
 }) {
   if (!isSupabaseConfigured()) return notFound();
 
-  const [vehicle, fuel, maintenance, alerts] = await Promise.all([
+  const [vehicle, fuel, maintenance, alerts, fines] = await Promise.all([
     getVehicle(params.id),
     getFuelEntries(params.id),
     getMaintenanceEntries(params.id),
     getActiveAlerts(),
+    getVehicleFines(params.id),
   ]);
   if (!vehicle) return notFound();
 
@@ -334,6 +337,15 @@ export default async function VehicleDetailPage({
             </div>
           )}
         </Card>
+      </Section>
+
+      <Section title="Amendes & points de permis">
+        <FineTrackerPanel
+          vehicleId={vehicle.id}
+          fines={fines}
+          totalVehicleSpend={cost.total}
+          currency={vehicle.currency}
+        />
       </Section>
     </div>
   );
