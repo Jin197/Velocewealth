@@ -2,70 +2,75 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Cookie, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from '@/lib/i18n/routing';
+import { Cookie } from 'lucide-react';
 
-export const STORAGE_KEY = 'velocewealth-cookies-acknowledged';
+export const STORAGE_KEY = 'vw-cookie-consent';
 
 export function CookieBanner() {
   const t = useTranslations('cookies');
-  const [show, setShow] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const ack = localStorage.getItem(STORAGE_KEY);
-    if (!ack) setShow(true);
+    const consent = localStorage.getItem(STORAGE_KEY);
+    if (!consent) {
+      setMounted(true);
+    }
   }, []);
 
-  if (!show) return null;
+  if (!mounted) return null;
 
   const handleAccept = () => {
-    localStorage.setItem(STORAGE_KEY, 'accepted');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ consent: true }));
     window.dispatchEvent(new Event('cookie-consent-updated'));
-    setShow(false);
+    setMounted(false);
   };
 
   const handleRefuse = () => {
-    localStorage.setItem(STORAGE_KEY, 'refused');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ consent: false }));
     window.dispatchEvent(new Event('cookie-consent-updated'));
-    setShow(false);
+    setMounted(false);
   };
 
   return (
-    <div className="fixed bottom-4 inset-x-4 z-50 mx-auto max-w-2xl">
-      <div className="rounded-card border border-border bg-[#16161A]/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 flex items-start gap-4">
-        <div className="rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/20 text-[#007AFF] p-3 shrink-0">
-          <Cookie className="h-5 w-5" strokeWidth={1.5} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-display font-semibold text-sm text-white">{t('title')}</div>
-          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t('description')}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button size="sm" onClick={handleAccept} className="bg-[#007AFF] hover:bg-[#007AFF]/90 text-white rounded-full px-5 py-2 font-semibold shadow-[0_0_15px_rgba(0,122,255,0.3)]">
-              {t('acceptAll') || 'Tout accepter'}
-            </Button>
-            <Button size="sm" onClick={handleRefuse} className="bg-[#2D2D2D]/80 hover:bg-[#2D2D2D] text-[#F5F5F7] border border-white/10 rounded-full px-5 py-2 font-semibold shadow-[0_0_15px_rgba(0,0,0,0.2)]">
-              {t('refuseAll') || 'Refuser tout'}
-            </Button>
-            <Button size="sm" variant="ghost" asChild className="text-muted-foreground hover:text-[#F5F5F7] rounded-full">
-              <Link href="/legal/cookies">{t('manage')}</Link>
-            </Button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-lg bg-[#16161A]/95 border border-white/[0.08] backdrop-blur-xl rounded-[2.5rem] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 ease-out">
+        <div className="flex flex-col items-center text-center space-y-5">
+          {/* Icone Securisée */}
+          <div className="rounded-full bg-[#007AFF]/10 border border-[#007AFF]/20 text-[#007AFF] p-4 shrink-0">
+            <Cookie className="h-8 w-8 animate-pulse" strokeWidth={1.5} />
           </div>
-          <div className="mt-3 text-[10px] text-muted-foreground/60 leading-relaxed border-t border-white/5 pt-2.5">
-            {t('dpoMention') || 'Pour toute question sur vos données, contactez notre DPO à dpo@velocewealth.app.'}
+
+          <div className="space-y-3">
+            <h2 className="font-display font-bold text-base sm:text-lg text-white leading-snug">
+              {t('title')}
+            </h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {t('description')}
+            </p>
+          </div>
+
+          {/* Double Choix Égalitaire */}
+          <div className="flex flex-row items-center gap-4 w-full pt-4">
+            <button
+              onClick={handleRefuse}
+              className="flex-1 py-3 text-sm font-semibold rounded-full bg-white border border-neutral-300 text-neutral-900 transition-all duration-300 hover:bg-neutral-50 active:scale-[0.98] shadow-sm"
+            >
+              {t('refuseAll')}
+            </button>
+            <button
+              onClick={handleAccept}
+              className="flex-1 py-3 text-sm font-semibold rounded-full bg-[#1F2937] text-white transition-all duration-300 hover:bg-neutral-800 active:scale-[0.98] shadow-md"
+            >
+              {t('acceptAll')}
+            </button>
+          </div>
+
+          <div className="text-[10px] text-muted-foreground/50 border-t border-white/5 w-full pt-4">
+            {t('dpoMention')}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleRefuse}
-          className="text-muted-foreground hover:text-white shrink-0 p-1 transition-colors"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" strokeWidth={1.5} />
-        </button>
       </div>
     </div>
   );
 }
-
