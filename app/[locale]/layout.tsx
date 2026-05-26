@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale, getTranslations } from 'next-intl/server';
 import { routing, locales, defaultLocale } from '@/lib/i18n/routing';
 import { ChatbotWidget } from '@/components/domain/chatbot-widget';
+import { CookieBanner } from '@/components/cookie-banner';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -70,6 +71,7 @@ export default async function LocaleLayout({
       <StructuredData />
       {children}
       <ChatbotWidget />
+      <CookieBanner />
     </NextIntlClientProvider>
   );
 }

@@ -173,16 +173,16 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (!user) return { error: 'Non authentifié' };
 
-  // 1 request / 5 minutes per user
+  // 1 request / 1 minute per user
   const bucket = await rateLimit(
     `delete-request:${user.id}`,
     1,
-    5 * 60 * 1000,
+    60 * 1000,
   );
   if (!bucket.ok) {
     return {
       error:
-        'Une demande a déjà été envoyée récemment. Patientez avant de réessayer.',
+        'Une demande a déjà été envoyée récemment. Patientez une minute avant de réessayer.',
     };
   }
 
@@ -232,6 +232,13 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
     locale: profile?.locale ?? 'fr',
   });
 
+  // Always log the OTP in development so developers can easily bypass email delays
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(
+      `[account-deletion] OTP for ${user.id} (development debug log): ${otp}`,
+    );
+  }
+
   if (apiKey && from) {
     try {
       await fetch('https://api.resend.com/emails', {
@@ -253,11 +260,10 @@ export async function requestAccountDeletionAction(): Promise<ActionResult> {
       // provider status. The OTP row is still valid; the user can retry
       // after the rate-limit window.
     }
-  } else {
-    // Dev environment without Resend: log to server console so the
-    // developer can copy-paste the OTP into the confirmation form.
+  } else if (process.env.NODE_ENV !== 'development') {
+    // Production fallback log if Resend is missing
     console.warn(
-      `[account-deletion] OTP for ${user.id} (dev mode, no Resend): ${otp}`,
+      `[account-deletion] OTP for ${user.id} (no Resend API key configured): ${otp}`,
     );
   }
 

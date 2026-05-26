@@ -36,8 +36,11 @@ export async function notifyNewDeviceLoginIfNeeded(
   try {
     const admin = createAdminClient();
 
-    // Look back 90 days for any prior login_success from the same UA+IP.
-    // If found, this device/network combo is familiar — no need to notify.
+    // Look back 90 days for any prior login_success with the same user-agent.
+    // IP is deliberately excluded from the match — it changes across
+    // wifi/4G/VPN on the same device and would produce false-positive alerts
+    // every time the user changes network. The cookie-based isCurrentDeviceTrusted
+    // check already short-circuits this branch for fully-trusted browsers.
     const ninetyDaysAgo = new Date(
       Date.now() - 90 * 24 * 60 * 60 * 1000,
     ).toISOString();
