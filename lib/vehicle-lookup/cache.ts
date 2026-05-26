@@ -27,7 +27,7 @@ export interface LookupResult {
   vin: string;
   color: string;
   trim: string;
-  source: 'siv' | 'nhtsa' | 'dvla' | 'cache';
+  source: 'siv' | 'nhtsa' | 'dvla' | 'cache' | 'carte-grise-ocr';
 }
 
 /**

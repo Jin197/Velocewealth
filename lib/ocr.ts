@@ -4,7 +4,7 @@ import { env } from '@/lib/env';
 
 let _client: ImageAnnotatorClient | null = null;
 
-function getVisionClient(): ImageAnnotatorClient {
+export function getVisionClient(): ImageAnnotatorClient {
   if (!_client) {
     const credentialsJson = env.googleVisionCredentials();
     let credentials;

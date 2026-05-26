@@ -24,7 +24,10 @@ import {
   Calendar,
   Wallet,
   ShieldCheck,
+  Camera,
+  Upload,
 } from 'lucide-react';
+import { BRAND_NAMES, BRANDS_INDEX } from '@/lib/data/car-brands';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,6 +76,9 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
 
     vehicleSetupTitle: "Votre premier véhicule",
     vehicleSetupSubtitle: "Saisissez sa plaque d'immatriculation pour l'identifier automatiquement.",
+    scanCarteGrise: "Scanner ma carte grise",
+    scanningCarteGrise: "Analyse en cours…",
+    orSeparator: "ou",
     plateLabel: "Plaque d'immatriculation",
     platePlaceholder: "AA-123-AA",
     plateHint: "Format AA-123-AA — marque, modèle et année détectés automatiquement.",
@@ -133,6 +139,9 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
 
     vehicleSetupTitle: "Your first vehicle",
     vehicleSetupSubtitle: "Enter its license plate number to identify it automatically.",
+    scanCarteGrise: "Scan vehicle registration",
+    scanningCarteGrise: "Analysing…",
+    orSeparator: "or",
     plateLabel: "License Plate",
     platePlaceholder: "AA-123-AA",
     plateHint: "Format AA-123-AA — make, model and year detected automatically.",
@@ -193,6 +202,9 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
 
     vehicleSetupTitle: "Su primer vehículo",
     vehicleSetupSubtitle: "Identifíquelo al instante a través de su matrícula.",
+    scanCarteGrise: "Escanear el permiso de circulación",
+    scanningCarteGrise: "Analizando…",
+    orSeparator: "o",
     plateLabel: "Matrícula",
     platePlaceholder: "AA-123-AA",
     plateHint: "Formato AA-123-AA — marca, modelo y año detectados automáticamente.",
@@ -253,6 +265,9 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
 
     vehicleSetupTitle: "مركبتك الأولى",
     vehicleSetupSubtitle: "تعرف عليها فوراً باستخدام رقم لوحة الترخيص.",
+    scanCarteGrise: "مسح بطاقة التسجيل",
+    scanningCarteGrise: "جاري التحليل…",
+    orSeparator: "أو",
     plateLabel: "رقم اللوحة",
     platePlaceholder: "AA-123-AA",
     plateHint: "بتنسيق AA-123-AA — سيتم اكتشاف الماركة والطراز والسنة تلقائياً.",
@@ -313,6 +328,9 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
 
     vehicleSetupTitle: "Seu primeiro veículo",
     vehicleSetupSubtitle: "Identifique-o instantaneamente através da sua matrícula.",
+    scanCarteGrise: "Digitalizar o livrete",
+    scanningCarteGrise: "A analisar…",
+    orSeparator: "ou",
     plateLabel: "Matrícula",
     platePlaceholder: "AA-123-AA",
     plateHint: "Formato AA-123-AA — marca, modelo e ano detetados automaticamente.",
@@ -367,7 +385,9 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
   const [plate, setPlate] = useState('');
   const [mileage, setMileage] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isScanningCarteGrise, setIsScanningCarteGrise] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const carteGriseInputRef = useRef<HTMLInputElement | null>(null);
 
   // Manual vehicle inputs
   const [make, setMake] = useState('Peugeot');
@@ -497,6 +517,57 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
       console.error('Vehicle lookup error:', err);
     } finally {
       setIsLookingUp(false);
+    }
+  };
+
+  // 3.5 Scan the user's vehicle-registration document and pre-fill the
+  //     form. Uses Google Vision OCR + a multi-region parser
+  //     (EU harmonised / UK V5C / Maghreb).
+  const handleCarteGriseScan = async (file: File) => {
+    setIsScanningCarteGrise(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/vehicles/scan-carte-grise', {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Scan échoué. Réessayez avec une photo plus nette.');
+        if (data.fallback === 'manual-entry') setShowAdvanced(true);
+        return;
+      }
+      const ext = data.extract as {
+        plate: string | null;
+        vin: string | null;
+        make: string | null;
+        model: string | null;
+        year: number | null;
+        fuelType: 'thermal' | 'electric' | 'hybrid' | null;
+        confidence: number;
+      };
+      if (ext.plate) setPlate(ext.plate);
+      if (ext.vin) setVin(ext.vin);
+      if (ext.make) setMake(ext.make);
+      if (ext.model) setModel(ext.model);
+      if (ext.year) setYear(ext.year);
+      if (ext.fuelType) setFuelType(ext.fuelType);
+
+      toast.success(
+        `Carte grise reconnue (${ext.confidence}% confiance). Vérifiez et complétez si nécessaire.`,
+        {
+          description: ext.make && ext.model ? `${ext.make} ${ext.model}` : undefined,
+        },
+      );
+
+      // Open the advanced panel so the user can verify what was extracted.
+      setShowAdvanced(true);
+    } catch (err) {
+      console.error('Carte grise scan error:', err);
+      toast.error('Erreur lors du scan. Vérifiez votre connexion.');
+    } finally {
+      setIsScanningCarteGrise(false);
     }
   };
 
@@ -904,6 +975,43 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                 </div>
 
                 <form onSubmit={handleFinalSubmit} className="space-y-4">
+                  {/* ── ONE-TAP SCAN: photo of registration document ── */}
+                  <input
+                    ref={carteGriseInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleCarteGriseScan(file);
+                      e.target.value = '';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => carteGriseInputRef.current?.click()}
+                    disabled={isScanningCarteGrise}
+                    className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl border border-[#C5A059]/30 bg-gradient-to-br from-[#C5A059]/10 to-[#C5A059]/5 hover:from-[#C5A059]/15 hover:to-[#C5A059]/10 text-sm font-semibold text-[#C5A059] transition-all disabled:opacity-50"
+                  >
+                    {isScanningCarteGrise ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t.scanningCarteGrise}
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-4 w-4" />
+                        {t.scanCarteGrise}
+                      </>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground/60 font-mono">
+                    <div className="flex-1 h-px bg-white/[0.04]" />
+                    {t.orSeparator}
+                    <div className="flex-1 h-px bg-white/[0.04]" />
+                  </div>
+
                   {/* License plate styling and current mileage */}
                   <Card className="p-6 space-y-5 border-veloce bg-veloce/5 shadow-glow-veloce relative overflow-hidden rounded-[2.2rem]">
                     
@@ -1011,12 +1119,24 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                           <p className="text-[11px] text-muted-foreground -mt-2">
                             {t.optionalHint}
                           </p>
+                          <datalist id="cg-brands">
+                            {BRAND_NAMES.map((b) => (
+                              <option key={b} value={b} />
+                            ))}
+                          </datalist>
+                          <datalist id="cg-models">
+                            {(BRANDS_INDEX[make] ?? []).map((m) => (
+                              <option key={m} value={m} />
+                            ))}
+                          </datalist>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-xs">{t.makeLabel}</Label>
                               <Input
                                 value={make}
                                 onChange={(e) => setMake(e.target.value)}
+                                list="cg-brands"
+                                autoComplete="off"
                                 className="bg-black/20 border-white/[0.08]"
                               />
                             </div>
@@ -1025,6 +1145,8 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                               <Input
                                 value={model}
                                 onChange={(e) => setModel(e.target.value)}
+                                list="cg-models"
+                                autoComplete="off"
                                 className="bg-black/20 border-white/[0.08]"
                               />
                             </div>
