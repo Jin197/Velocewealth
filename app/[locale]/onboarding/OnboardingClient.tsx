@@ -75,14 +75,16 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
     vehicleSetupSubtitle: "Saisissez sa plaque d'immatriculation pour l'identifier automatiquement.",
     plateLabel: "Plaque d'immatriculation",
     platePlaceholder: "AA-123-AA",
+    plateHint: "Format AA-123-AA — marque, modèle et année détectés automatiquement.",
     mileageLabel: "Kilométrage actuel",
     mileagePlaceholder: "42000",
     identifying: "Identification en cours...",
     identifiedSuccess: "{make} {model} identifié avec succès !",
     optional: "Optionnel",
+    optionalHint: "Tous les champs ci-dessous sont facultatifs. Modifiez-les uniquement si la détection automatique est incorrecte ou si vous voulez enrichir votre profil véhicule.",
     vinLabel: "Code VIN (17 caractères)",
     vinPlaceholder: "Entrez le VIN si la plaque échoue",
-    customizeInfo: "Personnaliser les informations (Marque, Modèle, Finances...)",
+    customizeInfo: "Détails supplémentaires (optionnel)",
     makeLabel: "Marque",
     modelLabel: "Modèle",
     yearLabel: "Année de mise en circulation",
@@ -133,14 +135,16 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
     vehicleSetupSubtitle: "Enter its license plate number to identify it automatically.",
     plateLabel: "License Plate",
     platePlaceholder: "AA-123-AA",
+    plateHint: "Format AA-123-AA — make, model and year detected automatically.",
     mileageLabel: "Current Mileage (km)",
     mileagePlaceholder: "42000",
     identifying: "Identifying vehicle...",
     identifiedSuccess: "{make} {model} successfully identified!",
     optional: "Optional",
+    optionalHint: "All fields below are optional. Update them only if auto-detection is wrong or to enrich your vehicle profile.",
     vinLabel: "VIN Code (17 characters)",
     vinPlaceholder: "Enter VIN if plate lookup fails",
-    customizeInfo: "Customize information manually (Make, Model, Engine...)",
+    customizeInfo: "Additional details (optional)",
     makeLabel: "Make",
     modelLabel: "Model",
     yearLabel: "Year of registration",
@@ -191,14 +195,16 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
     vehicleSetupSubtitle: "Identifíquelo al instante a través de su matrícula.",
     plateLabel: "Matrícula",
     platePlaceholder: "AA-123-AA",
+    plateHint: "Formato AA-123-AA — marca, modelo y año detectados automáticamente.",
     mileageLabel: "Kilometraje actual",
     mileagePlaceholder: "42000",
     identifying: "Identificando vehículo...",
     identifiedSuccess: "¡{make} {model} identificado con éxito!",
     optional: "Opcional",
+    optionalHint: "Todos los campos siguientes son opcionales. Modifíquelos solo si la detección automática es incorrecta o desea enriquecer su perfil.",
     vinLabel: "Código VIN (17 caracteres)",
     vinPlaceholder: "Introduzca el VIN si falla la matrícula",
-    customizeInfo: "Personalizar manualmente (Marca, Modelo, Energía...)",
+    customizeInfo: "Detalles adicionales (opcional)",
     makeLabel: "Marca",
     modelLabel: "Modelo",
     yearLabel: "Año de matriculación",
@@ -249,14 +255,16 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
     vehicleSetupSubtitle: "تعرف عليها فوراً باستخدام رقم لوحة الترخيص.",
     plateLabel: "رقم اللوحة",
     platePlaceholder: "AA-123-AA",
+    plateHint: "بتنسيق AA-123-AA — سيتم اكتشاف الماركة والطراز والسنة تلقائياً.",
     mileageLabel: "المسافة الحالية (كم)",
     mileagePlaceholder: "42000",
     identifying: "جاري التعرف على المركبة...",
     identifiedSuccess: "تم التعرف على {make} {model} بنجاح!",
     optional: "اختياري",
+    optionalHint: "جميع الحقول أدناه اختيارية. عدّلها فقط إذا كانت نتائج الاكتشاف التلقائي غير صحيحة أو لإثراء ملف مركبتك.",
     vinLabel: "رمز VIN (17 حرفاً)",
     vinPlaceholder: "أدخل رمز VIN إذا فشل البحث باللوحة",
-    customizeInfo: "تخصيص يدوي (الماركة، الموديل، المحرك...)",
+    customizeInfo: "تفاصيل إضافية (اختياري)",
     makeLabel: "الماركة",
     modelLabel: "الموديل",
     yearLabel: "سنة الصنع",
@@ -307,14 +315,16 @@ const ONBOARDING_TRANSLATIONS: Record<string, any> = {
     vehicleSetupSubtitle: "Identifique-o instantaneamente através da sua matrícula.",
     plateLabel: "Matrícula",
     platePlaceholder: "AA-123-AA",
+    plateHint: "Formato AA-123-AA — marca, modelo e ano detetados automaticamente.",
     mileageLabel: "Quilometragem atual",
     mileagePlaceholder: "42000",
     identifying: "Identificando veículo...",
     identifiedSuccess: "{make} {model} identificado com sucesso!",
     optional: "Opcional",
+    optionalHint: "Todos os campos abaixo são opcionais. Atualize-os apenas se a deteção automática estiver incorreta ou para enriquecer o seu perfil de veículo.",
     vinLabel: "Código VIN (17 caracteres)",
     vinPlaceholder: "Insira o VIN se a matrícula falhar",
-    customizeInfo: "Personalizar manualmente (Marca, Modelo, Energia...)",
+    customizeInfo: "Detalhes adicionais (opcional)",
     makeLabel: "Marca",
     modelLabel: "Modelo",
     yearLabel: "Ano de matrícula",
@@ -512,6 +522,10 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
           plate: plate.toUpperCase(),
           fuelType,
           currentMileageKm: Number(mileage),
+          purchasePrice: purchasePrice ? Number(purchasePrice) : undefined,
+          purchaseDate: purchaseDate || undefined,
+          insuranceProvider: insuranceProvider.trim() || undefined,
+          insuranceMonthly: insuranceMonthly ? Number(insuranceMonthly) : undefined,
         };
 
         const res = await completeOnboardingAction(payload);
@@ -918,8 +932,9 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                     <div className="space-y-4">
                       {/* License Plate Field */}
                       <div className="space-y-1.5">
-                        <Label htmlFor="plateOnboard" className="font-semibold text-sm text-white">
+                        <Label htmlFor="plateOnboard" className="font-semibold text-sm text-white flex items-center gap-1">
                           {t.plateLabel}
+                          <span className="text-destructive" aria-label="obligatoire">*</span>
                         </Label>
                         <div className="relative">
                           <Input
@@ -937,25 +952,32 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                             placeholder={t.platePlaceholder}
                             className="font-mono pl-10 text-lg uppercase tracking-widest bg-black/40 border-white/[0.08] focus:border-veloce rounded-xl"
                             required
+                            aria-required="true"
                           />
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {t.plateHint}
+                        </p>
                       </div>
 
                       {/* Current Mileage Field */}
                       <div className="space-y-1.5">
-                        <Label htmlFor="mileageOnboard" className="font-semibold text-sm text-white">
+                        <Label htmlFor="mileageOnboard" className="font-semibold text-sm text-white flex items-center gap-1">
                           {t.mileageLabel}
+                          <span className="text-destructive" aria-label="obligatoire">*</span>
                         </Label>
                         <Input
                           id="mileageOnboard"
                           name="currentMileageKm"
                           type="number"
+                          min={0}
                           value={mileage}
                           onChange={(e) => setMileage(e.target.value)}
                           placeholder={t.mileagePlaceholder}
                           className="font-mono text-lg bg-black/40 border-white/[0.08] focus:border-veloce rounded-xl"
                           required
+                          aria-required="true"
                         />
                       </div>
                     </div>
@@ -965,12 +987,16 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
+                    aria-expanded={showAdvanced}
                     className="w-full flex items-center justify-between p-3.5 rounded-xl border border-white/[0.04] bg-[#2D2D2D]/20 hover:bg-[#2D2D2D]/40 text-xs font-semibold text-muted-foreground transition-all"
                   >
                     <span className="flex items-center gap-2">
                       <Sliders className="h-3.5 w-3.5 text-[#C5A059]" />
                       {t.customizeInfo}
                     </span>
+                    <ChevronRight
+                      className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`}
+                    />
                   </button>
 
                   <AnimatePresence>
@@ -982,6 +1008,9 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                         className="overflow-hidden space-y-4"
                       >
                         <Card className="p-6 bg-black/30 border-white/[0.06] rounded-[1.8rem] space-y-4">
+                          <p className="text-[11px] text-muted-foreground -mt-2">
+                            {t.optionalHint}
+                          </p>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-xs">{t.makeLabel}</Label>
@@ -989,7 +1018,6 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                                 value={make}
                                 onChange={(e) => setMake(e.target.value)}
                                 className="bg-black/20 border-white/[0.08]"
-                                required
                               />
                             </div>
                             <div className="space-y-1">
@@ -998,17 +1026,17 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                                 value={model}
                                 onChange={(e) => setModel(e.target.value)}
                                 className="bg-black/20 border-white/[0.08]"
-                                required
                               />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-xs">{t.yearLabel}</Label>
                               <Input
                                 type="number"
+                                min={1900}
+                                max={new Date().getFullYear() + 1}
                                 value={year}
                                 onChange={(e) => setYear(Number(e.target.value))}
                                 className="bg-black/20 border-white/[0.08]"
-                                required
                               />
                             </div>
                             <div className="space-y-1">
@@ -1079,8 +1107,8 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
                   <div className="flex flex-col gap-3 pt-4">
                     <Button
                       type="submit"
-                      disabled={pending}
-                      className="w-full py-6 bg-[#007AFF] hover:bg-[#007AFF]/90 rounded-full font-bold text-white shadow-glow-veloce flex items-center justify-center gap-2 text-base transition-all duration-300"
+                      disabled={pending || !plate.trim() || !mileage || Number(mileage) <= 0}
+                      className="w-full py-6 bg-[#007AFF] hover:bg-[#007AFF]/90 rounded-full font-bold text-white shadow-glow-veloce flex items-center justify-center gap-2 text-base transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {pending ? (
                         <>

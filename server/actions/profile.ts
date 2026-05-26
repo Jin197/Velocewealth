@@ -132,6 +132,10 @@ export async function completeOnboardingAction(vehicleData: {
   plate: string;
   fuelType: 'hybrid' | 'electric' | 'thermal';
   currentMileageKm: number;
+  purchasePrice?: number;
+  purchaseDate?: string;
+  insuranceProvider?: string;
+  insuranceMonthly?: number;
 }): Promise<ActionResult> {
   if (!isSupabaseConfigured()) {
     return { ok: true };
@@ -181,6 +185,8 @@ export async function completeOnboardingAction(vehicleData: {
     return { ok: true };
   }
 
+  const today = new Date().toISOString().split('T')[0];
+  const purchasePrice = vehicleData.purchasePrice ?? 0;
   const { error: vehicleError } = await supabase
     .from('vehicles')
     .insert({
@@ -191,13 +197,15 @@ export async function completeOnboardingAction(vehicleData: {
       vin: vehicleData.vin || null,
       plate: vehicleData.plate,
       fuel_type: vehicleData.fuelType,
-      purchase_date: new Date().toISOString().split('T')[0],
-      purchase_price: 15000,
+      purchase_date: vehicleData.purchaseDate || today,
+      purchase_price: purchasePrice,
       currency: 'EUR',
       current_mileage_km: vehicleData.currentMileageKm,
       image_url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80',
-      estimated_resale_value: 12000,
-      resale_trend: 'stable'
+      estimated_resale_value: purchasePrice > 0 ? Math.round(purchasePrice * 0.8) : undefined,
+      resale_trend: 'stable',
+      insurance_provider: vehicleData.insuranceProvider?.trim() || undefined,
+      insurance_monthly: vehicleData.insuranceMonthly ?? undefined,
     });
 
   if (vehicleError) return { error: vehicleError.message };
