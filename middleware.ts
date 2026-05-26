@@ -13,6 +13,7 @@ const PROTECTED_PREFIXES = [
   'map',
   'eco-score',
   'settings',
+  'onboarding',
 ];
 const AUTH_ONLY_PATHS = ['login', 'signup', 'forgot-password'];
 
