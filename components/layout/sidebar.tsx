@@ -4,12 +4,11 @@ import { useRef, useState, useTransition } from 'react';
 import { Link, usePathname } from '@/lib/i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
 import {
-  LayoutDashboard,
+  Home,
   Car,
-  Fuel,
-  Wrench,
-  Leaf,
-  Settings,
+  CalendarClock,
+  BarChart3,
+  User,
   Sparkles,
   LogOut,
 } from 'lucide-react';
@@ -69,12 +68,17 @@ export function Sidebar() {
     });
   };
 
+  // Five fixed sections, à la Tesla / Revolut.
+  // The labels lean on the existing i18n catalogue when possible and add
+  // four new keys (`home`, `fleet`, `agenda`, `insights`, `me`) that we
+  // backfill in messages/*.json. We keep the legacy `dashboard` translation
+  // alive so other call sites don't crash.
   const nav = [
-    { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
-    { href: '/vehicles', label: t('vehicles'), icon: Car },
-    { href: '/fuel', label: t('fuel'), icon: Fuel },
-    { href: '/maintenance', label: t('maintenance'), icon: Wrench },
-    { href: '/eco-score', label: t('ecoScore'), icon: Leaf },
+    { href: '/dashboard', label: t('home'), icon: Home },
+    { href: '/vehicles', label: t('fleet'), icon: Car },
+    { href: '/agenda', label: t('agenda'), icon: CalendarClock },
+    { href: '/insights', label: t('insights'), icon: BarChart3 },
+    { href: '/settings', label: t('me'), icon: User },
   ] as const;
 
   return (
@@ -147,19 +151,6 @@ export function Sidebar() {
             </div>
           </Link>
         )}
-
-        <Link
-          href="/settings"
-          className={cn(
-            'flex items-center gap-3 rounded-btn px-3 py-2.5 text-sm transition-colors',
-            pathname.startsWith('/settings')
-              ? 'bg-muted text-foreground'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-          )}
-        >
-          <Settings className="h-4.5 w-4.5" strokeWidth={1.5} size={18} />
-          {t('settings')}
-        </Link>
 
         <button
           type="button"

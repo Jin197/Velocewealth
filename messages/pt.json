@@ -21,6 +21,10 @@
     "demoMode": "Modo demo"
   },
   "nav": {
+    "fleet": "Frota",
+    "agenda": "Agenda",
+    "insights": "Análises",
+    "me": "Eu",
     "dashboard": "Painel",
     "vehicles": "Veículos",
     "fuel": "Energia",

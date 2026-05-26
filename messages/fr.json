@@ -21,6 +21,10 @@
     "demoMode": "Mode démo"
   },
   "nav": {
+    "fleet": "Flotte",
+    "agenda": "Agenda",
+    "insights": "Insights",
+    "me": "Moi",
     "dashboard": "Tableau de bord",
     "vehicles": "Véhicules",
     "fuel": "Énergie",

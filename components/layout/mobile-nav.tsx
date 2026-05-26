@@ -2,20 +2,25 @@
 
 import { Link, usePathname } from '@/lib/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { LayoutDashboard, Car, Plus, Wrench, User } from 'lucide-react';
+import { Home, Car, Plus, CalendarClock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MobileNav() {
   const pathname = usePathname();
   const t = useTranslations('nav');
 
+  // Bottom-tab à 5 sections + scan flottant central, façon Tesla / Revolut.
+  // L'ordre est intentionnel : Home/Flotte à gauche (les écrans de navigation),
+  // Scan au milieu (l'action), Agenda/Moi à droite (les écrans de gestion).
   const items = [
-    { href: '/dashboard', label: t('home'), icon: LayoutDashboard, primary: false },
-    { href: '/vehicles', label: t('vehicles'), icon: Car, primary: false },
+    { href: '/dashboard', label: t('home'), icon: Home, primary: false },
+    { href: '/vehicles', label: t('fleet'), icon: Car, primary: false },
     { href: '/fuel/scan', label: t('scan'), icon: Plus, primary: true },
-    { href: '/maintenance', label: t('maintenance'), icon: Wrench, primary: false },
-    { href: '/settings', label: t('profile'), icon: User, primary: false },
+    { href: '/agenda', label: t('agenda'), icon: CalendarClock, primary: false },
+    { href: '/settings', label: t('me'), icon: User, primary: false },
   ];
+  // `Insights` is reachable from the desktop sidebar and via a quick-link
+  // card on Home; the mobile bottom-tab stays at 5 items to remain tappable.
 
   return (
     <nav

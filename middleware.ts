@@ -14,6 +14,8 @@ const PROTECTED_PREFIXES = [
   'eco-score',
   'settings',
   'onboarding',
+  'agenda',
+  'insights',
 ];
 const AUTH_ONLY_PATHS = ['login', 'signup', 'forgot-password'];
 
