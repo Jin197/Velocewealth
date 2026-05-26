@@ -1,15 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bell, Search, Sun, Moon, CircleHelp } from 'lucide-react';
+import { Search, Sun, Moon, CircleHelp } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Link } from '@/lib/i18n/routing';
 import { Logo } from './logo';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/components/user-context';
+import { NotificationBell } from './notification-bell';
+import type { InAppNotification } from '@/lib/types';
 
-export function Topbar({ title }: { title?: string }) {
+interface TopbarProps {
+  title?: string;
+  notifications?: InAppNotification[];
+  unreadCount?: number;
+}
+
+export function Topbar({
+  title,
+  notifications = [],
+  unreadCount = 0,
+}: TopbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -52,10 +64,10 @@ export function Topbar({ title }: { title?: string }) {
             <span className="h-4 w-4" aria-hidden="true" />
           )}
         </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9 relative" aria-label="Notifications">
-          <Bell className="h-4 w-4" strokeWidth={1.5} />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-eco" />
-        </Button>
+        <NotificationBell
+          initialNotifications={notifications}
+          initialUnreadCount={unreadCount}
+        />
         <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Centre d'aide" asChild>
           <Link href="/help-center">
             <CircleHelp className="h-4 w-4" strokeWidth={1.5} />

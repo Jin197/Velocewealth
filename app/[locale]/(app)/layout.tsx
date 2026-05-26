@@ -8,6 +8,10 @@ import { MfaBanner } from '@/components/domain/mfa-banner';
 import { getProfile } from '@/lib/data';
 import { isSupabaseConfigured } from '@/lib/env';
 import { getMfaStatus, type MfaStatus } from '@/lib/security/mfa-status';
+import {
+  getRecentNotifications,
+  getUnreadNotificationCount,
+} from '@/server/actions/notifications';
 import { cn } from '@/lib/utils';
 import { Link } from '@/lib/i18n/routing';
 import { getLocale, setRequestLocale } from 'next-intl/server';
@@ -89,12 +93,16 @@ export default async function AppLayout({
     }
   }
 
+  const [notifications, unreadCount] = profile
+    ? await Promise.all([getRecentNotifications(), getUnreadNotificationCount()])
+    : [[], 0];
+
   return (
     <UserProvider user={profile}>
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <Topbar />
+          <Topbar notifications={notifications} unreadCount={unreadCount} />
           {mfaStatus && !mfaStatus.enabled && (
             <MfaBanner
               daysRemaining={mfaStatus.daysRemaining}

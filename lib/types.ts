@@ -48,6 +48,83 @@ export type FineStatus =
   | 'contested'
   | 'cancelled';
 
+export type MaintenanceTaskSource = 'plan' | 'phm' | 'manual';
+
+export type MaintenanceTaskStatus =
+  | 'pending'
+  | 'scheduled'
+  | 'in_progress'
+  | 'done'
+  | 'snoozed'
+  | 'dismissed';
+
+export type MaintenanceCategory =
+  | 'oil'
+  | 'tires'
+  | 'brakes'
+  | 'filter'
+  | 'battery'
+  | 'inspection'
+  | 'other';
+
+export interface MaintenanceTaskInstructions {
+  checklist: string[];
+  tools: string[];
+  diyDifficulty: 1 | 2 | 3 | 4 | 5;
+  durationMinutes: number;
+  tutorialUrl?: string;
+}
+
+export interface MaintenanceTaskRecord {
+  id: string;
+  userId: string;
+  vehicleId: string;
+  source: MaintenanceTaskSource;
+  category: MaintenanceCategory;
+  title: string;
+  description: string | null;
+  instructions: MaintenanceTaskInstructions | null;
+  reasoning: string | null;
+  confidence: number | null;
+  estimatedCost: number | null;
+  estimatedDurationMin: number | null;
+  dueAtDate: string | null;
+  dueAtKm: number | null;
+  scheduledFor: string | null;
+  reminderDaysBefore: number;
+  lastReminderPhase: string | null;
+  lastReminderSentAt: string | null;
+  status: MaintenanceTaskStatus;
+  snoozeUntil: string | null;
+  garageId: string | null;
+  garageName: string | null;
+  notes: string | null;
+  linkedEntryId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type InAppNotificationKind =
+  | 'maintenance_reminder'
+  | 'maintenance_overdue'
+  | 'fine_majoration_soon'
+  | 'fine_added'
+  | 'mfa_required'
+  | 'other';
+
+export interface InAppNotification {
+  id: string;
+  userId: string;
+  kind: InAppNotificationKind;
+  title: string;
+  body: string | null;
+  link: string | null;
+  relatedVehicleId: string | null;
+  relatedTaskId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
 export interface TrafficFine {
   id: string;
   userId: string;

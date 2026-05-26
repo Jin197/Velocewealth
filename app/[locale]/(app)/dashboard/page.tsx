@@ -16,7 +16,9 @@ import { FuelEntryRow } from '@/components/domain/fuel-entry-row';
 import { SpendChart } from '@/components/domain/spend-chart';
 import { EnergyMix } from '@/components/domain/energy-mix';
 import { RegulatoryKpiCard } from '@/components/domain/regulatory-kpi-card';
+import { UpcomingTasksCard } from '@/components/domain/upcoming-tasks-card';
 import { getAllUserFines } from '@/server/actions/fines';
+import { getAllUserTasks } from '@/server/actions/maintenance-tasks';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoButton } from '@/components/domain/demo-button';
@@ -205,9 +207,10 @@ export default async function DashboardPage({ params }: PageProps) {
     );
   }
 
-  const [{ profile, vehicles, fuel, maintenance, alerts }, fines] = await Promise.all([
+  const [{ profile, vehicles, fuel, maintenance, alerts }, fines, tasks] = await Promise.all([
     getDashboardData(),
     getAllUserFines(),
+    getAllUserTasks(),
   ]);
 
   if (!profile || vehicles.length === 0) {
@@ -296,6 +299,13 @@ export default async function DashboardPage({ params }: PageProps) {
         totalFleetSpend={totalSpend}
         currency={profile.currency}
         hrefFirstVehicle={vehicles[0] ? `/vehicles/${vehicles[0].id}` : null}
+      />
+
+      <UpcomingTasksCard
+        tasks={tasks}
+        vehicleLabels={Object.fromEntries(
+          vehicles.map((v) => [v.id, `${v.make} ${v.model} · ${v.plate}`]),
+        )}
       />
 
       <div className="grid lg:grid-cols-3 gap-6">
