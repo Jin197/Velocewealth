@@ -2,7 +2,6 @@ import { Link } from '@/lib/i18n/routing';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Logo } from '@/components/layout/logo';
 import { LocaleSwitcher } from '@/components/locale-switcher';
-import { CookieBanner } from '@/components/cookie-banner';
 import { LandingHeader } from '@/components/layout/landing-header';
 
 export default async function MarketingLayout({
@@ -23,14 +22,13 @@ export default async function MarketingLayout({
         tNav={{
           features: tNav('features'),
           pricing: tNav('pricing'),
-          partners: tNav('partners'),
+          help: tNav('help'),
           login: tNav('login'),
           signup: tNav('signup'),
         }}
       />
       {children}
       <Footer />
-      <CookieBanner />
     </div>
   );
 }

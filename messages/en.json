@@ -41,7 +41,7 @@
     "scan": "Scan",
     "features": "Features",
     "pricing": "Pricing",
-    "partners": "Help Center",
+    "help": "Help Center",
     "login": "Sign in",
     "signup": "Try for free"
   },
@@ -212,12 +212,12 @@
     "rights": "All rights reserved"
   },
   "cookies": {
-    "title": "Essential cookies only",
-    "description": "Velocewealth uses only strictly necessary cookies (session, preferences). No advertising cookies, no third-party tracking.",
+    "title": "We respect your privacy and the security of your automotive data",
+    "description": "VeloceWealth uses essential cookies to ensure the proper functioning of the platform (such as remembering your secure session). With your agreement, we and our partners also use cookies to measure the site audience, optimize technical performance and offer you local maintenance services adapted to your vehicle. You can change your preferences at any time.",
     "accept": "Got it",
     "manage": "Manage",
     "acceptAll": "Accept all",
-    "refuseAll": "Refuse all",
+    "refuseAll": "Refuse",
     "dpoMention": "For any questions regarding your data, contact our DPO at dpo@velocewealth.app."
   },
   "legal": {
