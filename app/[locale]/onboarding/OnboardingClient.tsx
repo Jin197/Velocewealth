@@ -643,7 +643,7 @@ export default function OnboardingClient({ initialUser, locale }: OnboardingClie
         <div className="max-w-xl mx-auto space-y-3">
           
           {/* Top Row: step details and language switch */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-semibold text-white tracking-wide uppercase">
               {getStepTitle()}
             </span>
