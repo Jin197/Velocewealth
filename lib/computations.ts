@@ -2,6 +2,7 @@ import type {
   Vehicle,
   FuelEntry,
   MaintenanceEntry,
+  InsuranceRecord,
 } from '@/lib/types';
 
 export interface CostBreakdown {
@@ -24,6 +25,7 @@ export function computeCostPerKm(
   fuel: FuelEntry[],
   maintenance: MaintenanceEntry[],
   monthsBack: number = 12,
+  insuranceRecords: InsuranceRecord[] = [],
 ): CostBreakdown {
   const since = Date.now() - monthsBack * 30 * 86400000;
 
@@ -37,14 +39,12 @@ export function computeCostPerKm(
   const energy = fuelInRange.reduce((s, f) => s + f.totalPrice, 0);
   const maint = maintInRange.reduce((s, m) => s + m.cost, 0);
 
-  const purchaseTime = new Date(vehicle.purchaseDate).getTime();
-  let actualMonths = monthsBack;
-  if (!isNaN(purchaseTime)) {
-    const msDiff = Date.now() - purchaseTime;
-    const monthsOwned = msDiff > 0 ? msDiff / (30 * 24 * 60 * 60 * 1000) : 0;
-    actualMonths = Math.max(1, Math.min(monthsBack, Math.round(monthsOwned)));
-  }
-  const insurance = (vehicle.insuranceMonthly ?? 0) * actualMonths;
+  const insurance = computeInsuranceCost(
+    vehicle,
+    monthsBack,
+    insuranceRecords,
+    since,
+  );
 
   const mileages = fuelInRange.map((f) => f.mileageKm).filter(Boolean);
   const distance =
@@ -64,6 +64,39 @@ export function computeCostPerKm(
     costPerKm,
     currency: vehicle.currency,
   };
+}
+
+/**
+ * Insurance cost over the cost-per-km window. Two regimes:
+ *  - fixed mode (default): `insurance_monthly` * months actually owned in the
+ *    window. Falls back to 0 when the field is empty.
+ *  - variable mode: sum of `insurance_records.amount` whose `month` falls
+ *    inside the window. Records that belong to other vehicles or outside the
+ *    range are ignored.
+ */
+function computeInsuranceCost(
+  vehicle: Vehicle,
+  monthsBack: number,
+  insuranceRecords: InsuranceRecord[],
+  sinceMs: number,
+): number {
+  if (vehicle.insuranceMode === 'variable') {
+    return insuranceRecords
+      .filter(
+        (r) =>
+          r.vehicleId === vehicle.id &&
+          new Date(r.month).getTime() >= sinceMs,
+      )
+      .reduce((s, r) => s + (Number.isFinite(r.amount) ? r.amount : 0), 0);
+  }
+  const purchaseTime = new Date(vehicle.purchaseDate).getTime();
+  let actualMonths = monthsBack;
+  if (!isNaN(purchaseTime)) {
+    const msDiff = Date.now() - purchaseTime;
+    const monthsOwned = msDiff > 0 ? msDiff / (30 * 24 * 60 * 60 * 1000) : 0;
+    actualMonths = Math.max(1, Math.min(monthsBack, Math.round(monthsOwned)));
+  }
+  return (vehicle.insuranceMonthly ?? 0) * actualMonths;
 }
 
 export function energyMix(fuel: FuelEntry[]) {

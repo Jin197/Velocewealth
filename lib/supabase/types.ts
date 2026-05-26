@@ -68,6 +68,7 @@ export type Database = {
           resale_trend: 'up' | 'down' | 'stable';
           insurance_provider: string | null;
           insurance_monthly: number | null;
+          insurance_mode: 'fixed' | 'variable';
           registration_formula_number: string | null;
           archived_at: string | null;
           created_at: string;
@@ -93,6 +94,7 @@ export type Database = {
           resale_trend?: 'up' | 'down' | 'stable';
           insurance_provider?: string | null;
           insurance_monthly?: number | null;
+          insurance_mode?: 'fixed' | 'variable';
           registration_formula_number?: string | null;
           archived_at?: string | null;
         };
@@ -399,6 +401,30 @@ export type Database = {
           related_task_id?: string | null;
         };
         Update: { read_at?: string | null };
+        Relationships: [];
+      };
+      insurance_records: {
+        Row: {
+          id: string;
+          vehicle_id: string;
+          user_id: string;
+          month: string;
+          amount: number;
+          currency: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          vehicle_id: string;
+          user_id: string;
+          month: string;
+          amount: number;
+          currency: string;
+          notes?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['insurance_records']['Insert']>;
         Relationships: [];
       };
     };

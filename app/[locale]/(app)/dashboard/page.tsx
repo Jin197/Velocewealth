@@ -19,6 +19,7 @@ import { RegulatoryKpiCard } from '@/components/domain/regulatory-kpi-card';
 import { UpcomingTasksCard } from '@/components/domain/upcoming-tasks-card';
 import { getAllUserFines } from '@/server/actions/fines';
 import { getAllUserTasks } from '@/server/actions/maintenance-tasks';
+import { getAllUserInsuranceRecords } from '@/server/actions/insurance';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoButton } from '@/components/domain/demo-button';
@@ -207,11 +208,13 @@ export default async function DashboardPage({ params }: PageProps) {
     );
   }
 
-  const [{ profile, vehicles, fuel, maintenance, alerts }, fines, tasks] = await Promise.all([
-    getDashboardData(),
-    getAllUserFines(),
-    getAllUserTasks(),
-  ]);
+  const [{ profile, vehicles, fuel, maintenance, alerts }, fines, tasks, insuranceRecords] =
+    await Promise.all([
+      getDashboardData(),
+      getAllUserFines(),
+      getAllUserTasks(),
+      getAllUserInsuranceRecords(),
+    ]);
 
   if (!profile || vehicles.length === 0) {
     return (
@@ -240,7 +243,7 @@ export default async function DashboardPage({ params }: PageProps) {
   }
 
   const breakdowns = vehicles.map((v) =>
-    computeCostPerKm(v, fuel, maintenance, 6),
+    computeCostPerKm(v, fuel, maintenance, 6, insuranceRecords),
   );
   const totalSpend = breakdowns.reduce((s, b) => s + b.total, 0);
   const totalDistance = breakdowns.reduce((s, b) => s + b.distance, 0);

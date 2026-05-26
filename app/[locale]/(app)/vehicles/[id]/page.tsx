@@ -9,7 +9,8 @@ import {
   Calendar,
   Hash,
   Brain,
-  Activity
+  Activity,
+  Pencil,
 } from 'lucide-react';
 import { PageHeader, Section } from '@/components/domain/page-header';
 import { KpiCard } from '@/components/domain/kpi-card';
@@ -29,6 +30,7 @@ import {
 import { computeCostPerKm, tireWearPercent } from '@/lib/computations';
 import { FineTrackerPanel } from '@/components/domain/fine-tracker-panel';
 import { getVehicleFines } from '@/server/actions/fines';
+import { getInsuranceRecords } from '@/server/actions/insurance';
 import { formatCurrency, formatDistance, formatDate } from '@/lib/utils';
 import { isSupabaseConfigured } from '@/lib/env';
 
@@ -41,16 +43,18 @@ export default async function VehicleDetailPage({
 }) {
   if (!isSupabaseConfigured()) return notFound();
 
-  const [vehicle, fuel, maintenance, alerts, fines] = await Promise.all([
-    getVehicle(params.id),
-    getFuelEntries(params.id),
-    getMaintenanceEntries(params.id),
-    getActiveAlerts(),
-    getVehicleFines(params.id),
-  ]);
+  const [vehicle, fuel, maintenance, alerts, fines, insuranceRecords] =
+    await Promise.all([
+      getVehicle(params.id),
+      getFuelEntries(params.id),
+      getMaintenanceEntries(params.id),
+      getActiveAlerts(),
+      getVehicleFines(params.id),
+      getInsuranceRecords(params.id),
+    ]);
   if (!vehicle) return notFound();
 
-  const cost = computeCostPerKm(vehicle, fuel, maintenance, 6);
+  const cost = computeCostPerKm(vehicle, fuel, maintenance, 6, insuranceRecords);
   const lastTireService = maintenance.find((m) => m.category === 'tires');
   const tireWear = lastTireService
     ? tireWearPercent(
@@ -108,6 +112,11 @@ export default async function VehicleDetailPage({
                 <Button size="sm" className="bg-veloce text-white hover:bg-veloce/90" asChild>
                   <Link href={`/maintenance/prognostics/${vehicle.id}`}>
                     <Activity className="h-4 w-4" /> Diagnostic IA
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/vehicles/${vehicle.id}/edit`}>
+                    <Pencil className="h-4 w-4" /> Compléter les infos
                   </Link>
                 </Button>
                 <DeleteVehicleButton

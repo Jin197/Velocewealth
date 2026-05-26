@@ -39,6 +39,10 @@ function mapVehicle(row: Record<string, unknown>): Vehicle {
     insuranceMonthly: row.insurance_monthly
       ? Number(row.insurance_monthly)
       : undefined,
+    insuranceMode:
+      (row.insurance_mode as 'fixed' | 'variable' | undefined) ?? 'fixed',
+    registrationFormulaNumber:
+      (row.registration_formula_number as string) ?? undefined,
   };
 }
 

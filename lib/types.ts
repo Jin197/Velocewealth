@@ -25,7 +25,21 @@ export interface Vehicle {
   // Insurance
   insuranceProvider?: string;
   insuranceMonthly?: number;
+  insuranceMode?: 'fixed' | 'variable';
   registrationFormulaNumber?: string;
+}
+
+export interface InsuranceRecord {
+  id: string;
+  vehicleId: string;
+  userId: string;
+  /** ISO date string YYYY-MM-01 — first day of the month the amount applies to. */
+  month: string;
+  amount: number;
+  currency: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type InfractionCategory =

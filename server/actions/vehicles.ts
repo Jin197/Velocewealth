@@ -132,6 +132,12 @@ export async function updateVehicleAction(
       ...(v.insuranceMonthly !== undefined && {
         insurance_monthly: v.insuranceMonthly || null,
       }),
+      ...(v.vin !== undefined && { vin: v.vin || null }),
+      ...(v.purchaseDate !== undefined && { purchase_date: v.purchaseDate }),
+      ...(v.purchasePrice !== undefined && {
+        purchase_price: v.purchasePrice,
+      }),
+      ...(v.currency !== undefined && { currency: v.currency }),
     })
     .eq('id', id)
     .eq('user_id', user.id);
