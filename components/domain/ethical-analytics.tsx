@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
-
-const STORAGE_KEY = 'velocewealth-cookies-acknowledged';
+import { STORAGE_KEY } from '@/components/cookie-banner';
 
 export function EthicalAnalytics() {
   const [isAccepted, setIsAccepted] = useState(false);
@@ -12,8 +11,17 @@ export function EthicalAnalytics() {
     if (typeof window === 'undefined') return;
 
     const checkConsent = () => {
-      const ack = localStorage.getItem(STORAGE_KEY);
-      setIsAccepted(ack === 'accepted');
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        setIsAccepted(false);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw) as { consent?: boolean };
+        setIsAccepted(parsed.consent === true);
+      } catch {
+        setIsAccepted(false);
+      }
     };
 
     checkConsent();
