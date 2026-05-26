@@ -63,6 +63,11 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const profile = isSupabaseConfigured() ? await getProfile() : null;
+  
+  if (profile && !profile.hasCompletedOnboarding) {
+    redirect('/onboarding');
+  }
+
   const locale = await getLocale();
   setRequestLocale(locale);
   const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.fr;

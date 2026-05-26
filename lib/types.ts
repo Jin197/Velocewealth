@@ -119,5 +119,9 @@ export interface UserProfile {
   planTier: 'free' | 'premium' | 'family';
   createdAt?: string;
   isTrial?: boolean;
+  hasCompletedOnboarding?: boolean;
+  onboardingPersona?: 'collector' | 'daily' | 'fleet';
+  onboardingObjective?: 'tco' | 'phm' | 'resale';
+  onboardingMotorization?: 'hybrid' | 'electric' | 'thermal';
 }
 

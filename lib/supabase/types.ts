@@ -23,6 +23,10 @@ export type Database = {
           ocr_credits_used: number;
           created_at: string;
           updated_at: string;
+          has_completed_onboarding: boolean;
+          onboarding_persona: 'collector' | 'daily' | 'fleet' | null;
+          onboarding_objective: 'tco' | 'phm' | 'resale' | null;
+          onboarding_motorization: 'hybrid' | 'electric' | 'thermal' | null;
         };
         Insert: {
           id: string;
@@ -35,6 +39,10 @@ export type Database = {
           plan_tier?: 'free' | 'premium' | 'family';
           stripe_customer_id?: string | null;
           ocr_credits_used?: number;
+          has_completed_onboarding?: boolean;
+          onboarding_persona?: 'collector' | 'daily' | 'fleet' | null;
+          onboarding_objective?: 'tco' | 'phm' | 'resale' | null;
+          onboarding_motorization?: 'hybrid' | 'electric' | 'thermal' | null;
         };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];

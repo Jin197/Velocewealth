@@ -32,6 +32,36 @@ export async function createVehicleAction(
   }
 
   const v = parsed.data;
+
+  // Check for duplicates in active fleet (plate or VIN) in memory with normalized formatting
+  const { data: activeVehicles, error: fetchError } = await supabase
+    .from('vehicles')
+    .select('id, plate, vin')
+    .eq('user_id', user.id)
+    .is('archived_at', null);
+
+  if (fetchError) return { error: fetchError.message };
+
+  const normalizeString = (str: string) => {
+    return str.toUpperCase().replace(/[\s-]/g, '');
+  };
+
+  const cleanInputPlate = normalizeString(v.plate);
+  const cleanInputVin = v.vin ? normalizeString(v.vin) : null;
+
+  const isDuplicate = activeVehicles?.some(existing => {
+    const existingPlate = normalizeString(existing.plate);
+    const existingVin = existing.vin ? normalizeString(existing.vin) : null;
+    return (
+      existingPlate === cleanInputPlate ||
+      (cleanInputVin && existingVin === cleanInputVin)
+    );
+  });
+
+  if (isDuplicate) {
+    return { error: 'Ce véhicule (plaque ou VIN) est déjà enregistré dans votre flotte.' };
+  }
+
   const { data, error } = await supabase
     .from('vehicles')
     .insert({

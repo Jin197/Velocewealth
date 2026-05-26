@@ -146,6 +146,10 @@ function mapProfile(row: Record<string, unknown>): UserProfile {
     planTier: planTier,
     createdAt: createdAtStr,
     isTrial,
+    hasCompletedOnboarding: row.has_completed_onboarding as boolean,
+    onboardingPersona: row.onboarding_persona as 'collector' | 'daily' | 'fleet' | undefined,
+    onboardingObjective: row.onboarding_objective as 'tco' | 'phm' | 'resale' | undefined,
+    onboardingMotorization: row.onboarding_motorization as 'hybrid' | 'electric' | 'thermal' | undefined,
   };
 }
 

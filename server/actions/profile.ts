@@ -99,3 +99,119 @@ export async function updateLocaleAction(
   return { ok: true, locale: parsed.data };
 }
 
+export async function saveOnboardingAnswersAction(answers: {
+  onboardingPersona: 'collector' | 'daily' | 'fleet';
+  onboardingObjective: 'tco' | 'phm' | 'resale';
+  onboardingMotorization: 'hybrid' | 'electric' | 'thermal';
+}): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) {
+    return { ok: true };
+  }
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié' };
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      onboarding_persona: answers.onboardingPersona,
+      onboarding_objective: answers.onboardingObjective,
+      onboarding_motorization: answers.onboardingMotorization,
+    })
+    .eq('id', user.id);
+
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function completeOnboardingAction(vehicleData: {
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  plate: string;
+  fuelType: 'hybrid' | 'electric' | 'thermal';
+  currentMileageKm: number;
+}): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) {
+    return { ok: true };
+  }
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié' };
+
+  // 1. Check for duplicates in active fleet (plate or VIN) in memory with normalized formatting
+  const { data: activeVehicles, error: fetchError } = await supabase
+    .from('vehicles')
+    .select('id, plate, vin')
+    .eq('user_id', user.id)
+    .is('archived_at', null);
+
+  if (fetchError) return { error: fetchError.message };
+
+  const normalizeString = (str: string) => {
+    return str.toUpperCase().replace(/[\s-]/g, '');
+  };
+
+  const cleanInputPlate = normalizeString(vehicleData.plate);
+  const cleanInputVin = vehicleData.vin ? normalizeString(vehicleData.vin) : null;
+
+  const isDuplicate = activeVehicles?.some(v => {
+    const existingPlate = normalizeString(v.plate);
+    const existingVin = v.vin ? normalizeString(v.vin) : null;
+    return (
+      existingPlate === cleanInputPlate ||
+      (cleanInputVin && existingVin === cleanInputVin)
+    );
+  });
+
+  if (isDuplicate) {
+    // Self-healing: if the vehicle already exists (e.g. from a previous retry), 
+    // skip inserting a duplicate and directly mark onboarding as completed.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        has_completed_onboarding: true
+      })
+      .eq('id', user.id);
+
+    if (profileError) return { error: profileError.message };
+
+    revalidatePath('/', 'layout');
+    return { ok: true };
+  }
+
+  const { error: vehicleError } = await supabase
+    .from('vehicles')
+    .insert({
+      user_id: user.id,
+      make: vehicleData.make,
+      model: vehicleData.model,
+      year: vehicleData.year,
+      vin: vehicleData.vin || null,
+      plate: vehicleData.plate,
+      fuel_type: vehicleData.fuelType,
+      purchase_date: new Date().toISOString().split('T')[0],
+      purchase_price: 15000,
+      currency: 'EUR',
+      current_mileage_km: vehicleData.currentMileageKm,
+      image_url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=1200&q=80',
+      estimated_resale_value: 12000,
+      resale_trend: 'stable'
+    });
+
+  if (vehicleError) return { error: vehicleError.message };
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      has_completed_onboarding: true
+    })
+    .eq('id', user.id);
+
+  if (profileError) return { error: profileError.message };
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
