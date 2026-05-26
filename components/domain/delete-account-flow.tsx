@@ -302,6 +302,15 @@ export function DeleteAccountFlow() {
   const [phrase, setPhrase] = useState('');
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [pending, startTransition] = useTransition();
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   // Lazy stats fetch: only triggered when the user actually opens the modal,
   // so settings/profile renders don't make an extra round-trip on every load.
@@ -325,17 +334,24 @@ export function DeleteAccountFlow() {
   };
 
   const requestCode = () => {
+    if (resendCooldown > 0) return;
     startTransition(async () => {
       const res = await requestAccountDeletionAction();
       if ('error' in res && res.error) {
-        toast.error(
-          res.error.includes('déjà')
-            ? t.rateLimitedToast
-            : res.error,
-        );
+        // Backend rate-limit means a code from the previous request is still
+        // valid for up to 15 min — keep the user on the verify screen so they
+        // can paste it instead of being stuck on the danger panel.
+        if (res.error.includes('déjà')) {
+          toast.info(t.rateLimitedToast);
+          setResendCooldown(60);
+          setStage('verify');
+          return;
+        }
+        toast.error(res.error);
         return;
       }
       toast.success(t.sentToast);
+      setResendCooldown(60);
       setStage('verify');
     });
   };
@@ -530,11 +546,13 @@ export function DeleteAccountFlow() {
                       <div className="flex items-center justify-between gap-2 pt-2">
                         <button
                           type="button"
-                          onClick={() => setStage('danger')}
-                          disabled={pending}
-                          className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-30"
+                          onClick={requestCode}
+                          disabled={pending || resendCooldown > 0}
+                          className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50 disabled:no-underline font-mono"
                         >
-                          {t.resendCode}
+                          {resendCooldown > 0
+                            ? `${t.resendCode} (${resendCooldown}s)`
+                            : t.resendCode}
                         </button>
                         <div className="flex gap-2">
                           <Button
