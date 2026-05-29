@@ -311,107 +311,61 @@ export default async function DashboardPage({ params }: PageProps) {
         )}
       />
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-display text-base font-semibold">
-                {t.monthlySpend}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {t.monthlySpendSub}
-              </p>
-            </div>
-            <div className="flex gap-3 text-xs">
-              {vehicles.some((v) => v.insuranceMonthly && v.insuranceMonthly > 0) && (
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#C5A059]" /> {t.insurance}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-veloce" /> {t.energy}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-eco" /> {t.maintenance}
-              </span>
-            </div>
+      {/* Critical alerts only — the financial charts and energy mix moved
+          to /insights. Per-vehicle fuel/maintenance breakdowns moved to
+          the vehicle tabs. The Home page stays a synthesis. */}
+      {criticalAlerts.length > 0 && (
+        <Section
+          title={t.maintenanceAlerts}
+          description={t.maintenanceAlertsSub}
+          action={
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/agenda">
+                {t.viewAll} <ArrowRight className="h-3 w-3" />
+              </Link>
+            </Button>
+          }
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            {criticalAlerts.map((a) => (
+              <AlertCard key={a.id} alert={a} />
+            ))}
           </div>
-          <SpendChart data={monthly} currency={profile.currency} />
-        </Card>
-
-        <Card className="p-6">
-          <div className="mb-4">
-            <h2 className="font-display text-base font-semibold">
-              {t.energyMix}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {t.energyMixSub}
-            </p>
-          </div>
-          <EnergyMix
-            thermal={mix.thermal}
-            electric={mix.electric}
-            thermalVolume={mix.thermalVolume}
-            electricVolume={mix.electricVolume}
-          />
-          {mix.thermalAmount > 0 && (
-            <div className="mt-6 rounded-btn bg-eco/5 border border-eco/10 p-3">
-              <div className="text-xs text-eco font-medium">
-                {t.elecSavings}
-              </div>
-              <div className="font-mono text-lg font-semibold mt-1 tabular-nums">
-                {formatCurrency(mix.thermalAmount * 0.3, profile.currency)}
-              </div>
-              <div className="text-[11px] text-muted-foreground">
-                {t.vsThermal}
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {(criticalAlerts.length > 0 || recentFuel.length > 0) && (
-        <div className="grid lg:grid-cols-2 gap-6">
-          {criticalAlerts.length > 0 && (
-            <Section
-              title={t.maintenanceAlerts}
-              description={t.maintenanceAlertsSub}
-              action={
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/maintenance">
-                    {t.viewAll} <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-              }
-            >
-              <div className="space-y-2">
-                {criticalAlerts.map((a) => (
-                  <AlertCard key={a.id} alert={a} />
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {recentFuel.length > 0 && (
-            <Section
-              title={t.recentEnergySpend}
-              action={
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/fuel">
-                    {t.viewAll} <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-              }
-            >
-              <Card className="divide-y divide-border">
-                {recentFuel.map((e) => (
-                  <FuelEntryRow key={e.id} entry={e} />
-                ))}
-              </Card>
-            </Section>
-          )}
-        </div>
+        </Section>
       )}
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Link
+          href="/insights"
+          className="rounded-card border border-border bg-card hover:bg-muted/40 transition-colors p-4 flex items-center gap-3"
+        >
+          <div className="rounded-btn bg-eco/10 text-eco p-2.5">
+            <Activity className="h-4 w-4" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">Insights</div>
+            <div className="text-[11px] text-muted-foreground">
+              Coûts, mix énergétique, comparaison de votre flotte
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+        <Link
+          href="/agenda"
+          className="rounded-card border border-border bg-card hover:bg-muted/40 transition-colors p-4 flex items-center gap-3"
+        >
+          <div className="rounded-btn bg-amber-500/10 text-amber-500 p-2.5">
+            <Wallet className="h-4 w-4" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">Agenda</div>
+            <div className="text-[11px] text-muted-foreground">
+              Vos rappels d'entretien et amendes à régler
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+      </div>
 
       <Section
         title={t.yourVehicles}
