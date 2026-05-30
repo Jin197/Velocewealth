@@ -44,15 +44,27 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-pathname-stripped', stripped);
 
   // ── OAuth stray-payload safety net ────────────────────────────────────
-  // If Supabase redirects an OAuth response (?code=... or ?error=...) to
-  // anywhere other than /auth/callback (typically because the Redirect URL
-  // isn't allow-listed in the dashboard), forward the payload to the right
-  // handler so the user sees a sensible result instead of a blank page.
+  // If Supabase redirects an OAuth response (?code=...) anywhere other
+  // than /auth/callback (typically because the Redirect URL isn't
+  // allow-listed in the dashboard), forward it to the right handler so
+  // the user sees a sensible result instead of a blank page.
+  //
+  // We DON'T catch `?error=` here because /auth/callback already redirects
+  // failures to /login?error=<kind> for display. Catching `error=` would
+  // create an infinite loop: /login?error → /auth/callback → /login?error → …
+  // The login/signup/forgot-password pages are excluded explicitly so even
+  // a stray `?code=` on them doesn't bounce.
   const searchParams = request.nextUrl.searchParams;
+  const isAuthLandingPage =
+    firstSeg === 'login' ||
+    firstSeg === 'signup' ||
+    firstSeg === 'forgot-password' ||
+    firstSeg === 'reset-password';
   const hasOAuthPayload =
-    (searchParams.has('code') || searchParams.has('error')) &&
+    searchParams.has('code') &&
     !path.startsWith('/auth/callback') &&
-    !path.startsWith('/api/');
+    !path.startsWith('/api/') &&
+    !isAuthLandingPage;
   if (hasOAuthPayload) {
     const target = new URL('/auth/callback', request.url);
     target.search = request.nextUrl.search;

@@ -89,6 +89,13 @@ const OAUTH_ERROR_LABELS: Record<
     ar: 'فشل تسجيل الدخول. حاول مرة أخرى.',
     pt: 'Falha no início de sessão. Tenta novamente.',
   },
+  link_expired: {
+    fr: "Ce lien a expiré. Demande un nouveau lien pour réinitialiser ton mot de passe.",
+    en: 'This link has expired. Request a new password-reset link.',
+    es: 'Este enlace ha expirado. Solicita uno nuevo para restablecer la contraseña.',
+    ar: 'انتهت صلاحية هذا الرابط. اطلب رابطاً جديداً لإعادة تعيين كلمة المرور.',
+    pt: 'Este link expirou. Solicita um novo link para repor a palavra-passe.',
+  },
   oauth_exchange: {
     fr: 'Échec de l\'échange de code. Reconnecte-toi.',
     en: 'Code exchange failed. Please sign in again.',

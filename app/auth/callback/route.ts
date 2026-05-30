@@ -20,15 +20,19 @@ export async function GET(request: Request) {
   const oauthErrorCode = url.searchParams.get('error_code');
   const next = url.searchParams.get('next') ?? '/dashboard';
 
-  // ── Provider returned an explicit error (user cancelled, expired flow_state, …).
-  // Forward a short, stable error key to /login so the UI can show a clear toast.
+  // ── Provider returned an explicit error (user cancelled, expired flow_state,
+  // recovery link expired, …). Forward a short, stable error key to /login so
+  // the UI can show a clear toast. `otp_expired` is the most common one in
+  // practice (password-reset link clicked >1h after delivery).
   if (oauthError) {
     const errKey =
       oauthErrorCode === 'flow_state_already_used'
         ? 'oauth_replay'
         : oauthErrorCode === 'flow_state_expired'
           ? 'oauth_expired'
-          : 'oauth_failed';
+          : oauthErrorCode === 'otp_expired'
+            ? 'link_expired'
+            : 'oauth_failed';
     return NextResponse.redirect(
       new URL(`/login?error=${errKey}`, request.url),
     );
