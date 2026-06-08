@@ -74,7 +74,11 @@ export function Topbar({
           </Link>
         </Button>
         <Link href="/settings/profile" className="lg:hidden ml-1 hover:scale-105 transition-transform shrink-0">
-          <Avatar name={currentUser.fullName} size="sm" />
+          <Avatar
+            name={currentUser.fullName}
+            src={currentUser.avatarUrl ?? null}
+            size="sm"
+          />
         </Link>
       </div>
     </header>

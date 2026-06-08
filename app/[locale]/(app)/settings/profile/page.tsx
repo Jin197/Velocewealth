@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Loader2, Trash2, AlertTriangle } from 'lucide-react';
-import { Avatar } from '@/components/ui/avatar';
+import { AvatarUpload } from '@/components/domain/avatar-upload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input, Label } from '@/components/ui/input';
@@ -239,21 +239,20 @@ export default function ProfileSettingsPage() {
   return (
     <div className="space-y-6">
       <form action={handleSubmit} className="space-y-6">
-        <Card className="p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <Avatar name={user.fullName} size="lg" />
-              <div className="min-w-0">
-                <div className="font-display text-lg font-semibold truncate">
-                  {user.fullName}
-                </div>
-                <div className="text-sm text-muted-foreground truncate">{user.email}</div>
-              </div>
+        <Card className="p-6 space-y-4">
+          <div>
+            <div className="font-display text-lg font-semibold truncate">
+              {user.fullName}
             </div>
-            <Button type="button" variant="outline" size="sm" disabled className="shrink-0 self-start sm:self-auto">
-              {t.changePhoto}
-            </Button>
+            <div className="text-sm text-muted-foreground truncate">
+              {user.email}
+            </div>
           </div>
+          <AvatarUpload
+            fullName={user.fullName}
+            initialAvatarUrl={user.avatarUrl ?? null}
+            size="lg"
+          />
         </Card>
 
         <Card className="p-6 space-y-5">

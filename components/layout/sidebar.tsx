@@ -166,7 +166,11 @@ export function Sidebar() {
           href="/settings/profile"
           className="flex items-center gap-3 rounded-btn p-2 hover:bg-muted transition-colors"
         >
-          <Avatar name={currentUser.fullName} size="sm" />
+          <Avatar
+            name={currentUser.fullName}
+            src={currentUser.avatarUrl ?? null}
+            size="sm"
+          />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium truncate">
               {currentUser.fullName}

@@ -63,6 +63,32 @@ export async function updateProfileAction(
   return { ok: true, locale: parsed.data.locale };
 }
 
+/**
+ * Persists the avatar URL on the user's profile after a successful upload
+ * through /api/upload/avatar. Accepts either the public Supabase URL
+ * returned by that endpoint, or an empty string to clear the avatar.
+ */
+export async function updateAvatarAction(
+  avatarUrl: string | null,
+): Promise<ActionResult> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Non authentifié' };
+
+  const cleaned = avatarUrl?.trim() || null;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: cleaned })
+    .eq('id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
 export async function updateLocaleAction(
   locale: string,
 ): Promise<ActionResult> {

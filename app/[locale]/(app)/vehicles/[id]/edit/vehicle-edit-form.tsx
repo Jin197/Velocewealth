@@ -17,6 +17,7 @@ import { Input, Label } from '@/components/ui/input';
 import { Section } from '@/components/domain/page-header';
 import { updateVehicleAction } from '@/server/actions/vehicles';
 import { InsuranceManager } from './insurance-manager';
+import { VehiclePhotoUpload } from '@/components/domain/vehicle-photo-upload';
 import type { Vehicle, InsuranceRecord } from '@/lib/types';
 
 interface Props {
@@ -50,6 +51,9 @@ export function VehicleEditForm({ vehicle, initialInsuranceRecords }: Props) {
   const [registrationFormula, setRegistrationFormula] = useState(
     vehicle.registrationFormulaNumber ?? '',
   );
+  // Latest public Supabase URL returned by the photo upload component;
+  // submitted to updateVehicleAction so vehicles.image_url is refreshed.
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +72,7 @@ export function VehicleEditForm({ vehicle, initialInsuranceRecords }: Props) {
       fd.set('purchaseDate', purchaseDate);
       fd.set('purchasePrice', purchasePrice);
       fd.set('insuranceProvider', insuranceProvider);
+      if (imageUrl) fd.set('imageUrl', imageUrl);
 
       const res = await updateVehicleAction(vehicle.id, fd);
       if (res.error) {
@@ -92,6 +97,25 @@ export function VehicleEditForm({ vehicle, initialInsuranceRecords }: Props) {
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
+      {/* ── Photo du véhicule ── */}
+      <Section
+        title="Photo"
+        description="JPEG, PNG ou WebP — affichée sur la fiche et le dashboard"
+      >
+        <Card className="p-5">
+          {vehicle.imageUrl && !imageUrl && (
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Une photo est déjà associée à ce véhicule. En téléverser une
+              nouvelle la remplacera après enregistrement.
+            </p>
+          )}
+          <VehiclePhotoUpload
+            name="imageUrl"
+            onUploaded={(_path, url) => setImageUrl(url)}
+          />
+        </Card>
+      </Section>
+
       {/* ── Identité véhicule ── */}
       <Section
         title="Identité"
