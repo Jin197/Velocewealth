@@ -127,7 +127,7 @@ export default async function PrognosticsPage({
               }
             </p>
             <Button variant="outline" size="sm" className="mt-3 border-amber-500/30 text-amber-600 hover:bg-amber-500 hover:text-white" asChild>
-              <Link href={`/vehicles/${vehicleId}/maintenance/new`}>Scanner mon historique</Link>
+              <Link href={`/maintenance/new?vehicle=${vehicleId}`}>Scanner mon historique</Link>
             </Button>
           </div>
         </div>
