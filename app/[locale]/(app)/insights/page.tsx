@@ -14,9 +14,11 @@ import { Card } from '@/components/ui/card';
 import { getDashboardData } from '@/lib/data';
 import {
   computeCostPerKm,
+  computeEcoScore,
   energyMix,
   monthlySpend,
 } from '@/lib/computations';
+import { BackLink } from '@/components/layout/back-link';
 import { getAllUserInsuranceRecords } from '@/server/actions/insurance';
 import { isSupabaseConfigured } from '@/lib/env';
 import { formatCurrency, formatDistance } from '@/lib/utils';
@@ -55,9 +57,11 @@ export default async function InsightsPage() {
   const fleetCostPerKm = totalDistance > 0 ? totalSpend / totalDistance : 0;
   const mix = energyMix(fuel);
   const monthly = monthlySpend(fuel, maintenance, 6, vehicles);
+  const eco = computeEcoScore(fuel);
 
   return (
     <div className="container py-6 lg:py-8 space-y-8">
+      <BackLink href="/dashboard" label="Tableau de bord" />
       <PageHeader
         title="Insights"
         description="Comprenez votre coût et votre impact, agrégés sur toute la flotte."
@@ -85,10 +89,15 @@ export default async function InsightsPage() {
         />
         <KpiCard
           label="Score éco"
-          value="82"
+          value={eco ? String(eco.score) : '—'}
           unit="/100"
-          variant="premium"
+          variant={eco && eco.tier === 'excellent' ? 'premium' : 'default'}
           icon={<Leaf className="h-4 w-4" strokeWidth={1.5} />}
+          hint={
+            eco
+              ? `${eco.electricSharePct} % d'énergie électrique · ${eco.sampleSize} relevés`
+              : "Aucun relevé d'énergie — score indisponible."
+          }
         />
       </div>
 

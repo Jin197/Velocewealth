@@ -124,6 +124,44 @@ export function energyMix(fuel: FuelEntry[]) {
   };
 }
 
+export interface EcoScoreResult {
+  /** 0-100 score, 100 = ideal. */
+  score: number;
+  /** Visual tier the score falls into. */
+  tier: 'excellent' | 'good' | 'fair' | 'poor';
+  /** % share of electric energy in the user's energy mix, used as the main
+   *  driver. Exposed so the UI can show "X% of energy from electricity". */
+  electricSharePct: number;
+  /** Number of fuel entries that fed the calculation; <3 = "low signal". */
+  sampleSize: number;
+}
+
+/**
+ * Compute the user's eco-score from their actual fuel/energy history.
+ *
+ * Until we have OBD telemetry plugged in, the dominant lever is the energy
+ * mix: every euro the user spends on electric charging shifts the score
+ * up. We anchor the baseline at 40 (a fully-thermal driver doesn't deserve
+ * 0 — they still might drive efficiently) and award up to +50 points for
+ * a 100% electric mix, plus a small +10 maturity bonus when there are
+ * enough records to trust the signal (>=12 entries ≈ one year of fill-ups).
+ *
+ * Returns null when there is no fuel data at all so the UI can render a
+ * "no data" state instead of a misleading number.
+ */
+export function computeEcoScore(fuel: FuelEntry[]): EcoScoreResult | null {
+  if (!fuel || fuel.length === 0) return null;
+  const mix = energyMix(fuel);
+  const electricSharePct = Math.round(mix.electric * 100);
+  const baseline = 40;
+  const energyBonus = Math.round(mix.electric * 50);
+  const maturityBonus = fuel.length >= 12 ? 10 : 0;
+  const score = Math.max(0, Math.min(100, baseline + energyBonus + maturityBonus));
+  const tier: EcoScoreResult['tier'] =
+    score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'fair' : 'poor';
+  return { score, tier, electricSharePct, sampleSize: fuel.length };
+}
+
 /** Naive wear estimation: linear from last service to next due. */
 export function tireWearPercent(
   currentKm: number,

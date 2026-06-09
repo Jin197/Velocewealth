@@ -5,6 +5,7 @@ import { usePathname } from '@/lib/i18n/routing';
 import { User, CreditCard, Bell, Globe, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocale } from 'next-intl';
+import { BackLink } from '@/components/layout/back-link';
 
 const TRANSLATIONS = {
   fr: {
@@ -68,7 +69,8 @@ export default function SettingsLayout({
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl mx-auto w-full">
-      <h1 className="font-display text-2xl lg:text-3xl font-bold tracking-tight mb-6">
+      <BackLink href="/dashboard" label="Tableau de bord" />
+      <h1 className="font-display text-2xl lg:text-3xl font-bold tracking-tight mt-3 mb-6">
         {t.title}
       </h1>
       <div className="flex flex-col lg:grid lg:grid-cols-[220px_1fr] gap-6">
