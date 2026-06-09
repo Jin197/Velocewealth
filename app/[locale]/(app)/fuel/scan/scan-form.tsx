@@ -25,6 +25,9 @@ type Stage = 'capture' | 'scanning' | 'review';
 interface VehicleOpt {
   id: string;
   label: string;
+  /** Last known odometer reading — pre-fills the mileage input so the user
+   * only has to bump it by the trip they did since the last fill-up. */
+  currentMileageKm: number;
 }
 
 interface OcrResult {
@@ -35,15 +38,6 @@ interface OcrResult {
   stationName: string;
   stationCity: string;
 }
-
-const fallbackOcr: OcrResult = {
-  energyType: 'gasoline',
-  quantity: 38.2,
-  unitPrice: 1.789,
-  totalPrice: 68.34,
-  stationName: 'TotalEnergies Access',
-  stationCity: 'Lyon',
-};
 
 export function ScanForm({
   vehicles,
@@ -75,37 +69,56 @@ export function ScanForm({
     }
   }, [quantity, unitPrice]);
 
-  const runOcr = async (file?: File) => {
+  // Mileage pre-fill: starts at the selected vehicle's current odometer
+  // reading. The user typically only has to bump it by the distance driven
+  // since their last fill-up.
+  const initialVehicle =
+    vehicles.find((v) => v.id === defaultVehicleId) ?? vehicles[0];
+  const [selectedVehicleId, setSelectedVehicleId] = useState(
+    initialVehicle?.id ?? '',
+  );
+  const [mileageKm, setMileageKm] = useState<number>(
+    initialVehicle?.currentMileageKm ?? 0,
+  );
+  const handleVehicleChange = (vehicleId: string) => {
+    setSelectedVehicleId(vehicleId);
+    const v = vehicles.find((x) => x.id === vehicleId);
+    if (v) setMileageKm(v.currentMileageKm);
+  };
+
+  const runOcr = async (file: File) => {
     setStage('scanning');
     try {
-      if (!file) {
-        // No file picked: simulate with fallback (still useful for showcase mode)
-        await new Promise((r) => setTimeout(r, 1800));
-        setPrefill(fallbackOcr);
-        setQuantity(fallbackOcr.quantity);
-        setUnitPrice(fallbackOcr.unitPrice);
-        setTotalPrice(fallbackOcr.totalPrice);
-        setConfidence(96);
-        setStage('review');
-        return;
-      }
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/ocr', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? 'OCR indisponible — saisie manuelle');
+        toast.error(
+          data.error ?? "OCR indisponible — vérifie tes infos ci-dessous.",
+        );
         setStage('review');
         return;
       }
+      // Real OCR result. Reject silly values defensively (negative numbers,
+      // NaN) so the form doesn't show garbage to the user.
+      const safe = (n: unknown) =>
+        typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : 0;
       setPrefill(data);
-      setQuantity(data.quantity ?? 0);
-      setUnitPrice(data.unitPrice ?? 0);
-      setTotalPrice(data.totalPrice ?? 0);
-      setConfidence(data.confidence);
+      setQuantity(safe(data.quantity));
+      setUnitPrice(safe(data.unitPrice));
+      setTotalPrice(safe(data.totalPrice));
+      setConfidence(
+        typeof data.confidence === 'number' ? data.confidence : undefined,
+      );
+      if (data.confidence != null && data.confidence < 50) {
+        toast.warning(
+          'Ticket peu lisible — vérifie les champs avant d’enregistrer.',
+        );
+      }
       setStage('review');
-    } catch (e) {
-      toast.error('OCR indisponible — saisie manuelle');
+    } catch {
+      toast.error("Connexion OCR indisponible — saisie manuelle possible.");
       setStage('review');
     }
   };
@@ -167,7 +180,7 @@ export function ScanForm({
         <>
           <OcrScanner
             scanning={stage === 'scanning'}
-            onCapture={() => runOcr()}
+            onCapture={(file) => runOcr(file)}
             onUpload={() => document.getElementById('ocr-upload')?.click()}
           />
           <input
@@ -217,7 +230,8 @@ export function ScanForm({
                 <Select
                   id="vehicleId"
                   name="vehicleId"
-                  defaultValue={defaultVehicleId}
+                  value={selectedVehicleId}
+                  onChange={(e) => handleVehicleChange(e.target.value)}
                 >
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -313,8 +327,18 @@ export function ScanForm({
                   name="mileageKm"
                   type="number"
                   className="font-mono"
+                  value={mileageKm || ''}
+                  onChange={(e) =>
+                    setMileageKm(parseInt(e.target.value, 10) || 0)
+                  }
                   required
                 />
+                {initialVehicle && mileageKm < initialVehicle.currentMileageKm && (
+                  <p className="text-[11px] text-amber-500">
+                    Inférieur au dernier kilométrage connu (
+                    {initialVehicle.currentMileageKm.toLocaleString('fr-FR')} km).
+                  </p>
+                )}
               </div>
             </div>
           </Card>

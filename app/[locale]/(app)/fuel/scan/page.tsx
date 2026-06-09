@@ -44,6 +44,7 @@ export default async function ScanPage({
       vehicles={vehicles.map((v) => ({
         id: v.id,
         label: `${v.make} ${v.model} · ${v.plate}`,
+        currentMileageKm: v.currentMileageKm,
       }))}
       defaultVehicleId={searchParams.vehicle ?? vehicles[0].id}
       defaultCurrency={profile?.currency ?? 'EUR'}

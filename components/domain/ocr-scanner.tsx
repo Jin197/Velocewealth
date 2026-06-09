@@ -1,22 +1,185 @@
 'use client';
 
-import { Camera, Upload, ScanLine } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Camera,
+  Upload,
+  ScanLine,
+  CameraOff,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface OcrScannerProps {
-  onCapture?: () => void;
+  /** Called with the captured image, ready to be sent to /api/ocr. */
+  onCapture?: (file: File) => void;
+  /** Triggers the host's hidden <input type=file> so the user can pick from disk. */
   onUpload?: () => void;
+  /** Whether the parent is currently running OCR — we freeze the UI while true. */
   scanning?: boolean;
 }
 
+/**
+ * Live-camera ticket capture. On mount we try to attach the device's
+ * back-facing camera to a <video>; if that fails (no permission, no
+ * camera, desktop without webcam) we degrade gracefully to the upload
+ * fallback. The user can also force-fall-back via the "Pas de caméra"
+ * button which is always visible.
+ *
+ * The "Capturer" button draws the current frame onto an offscreen
+ * <canvas>, encodes it as JPEG and hands a real `File` to the parent so
+ * the OCR pipeline gets actual pixels — no more fake "TotalEnergies"
+ * placeholder data.
+ */
 export function OcrScanner({ onCapture, onUpload, scanning }: OcrScannerProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraStatus, setCameraStatus] = useState<
+    'idle' | 'requesting' | 'live' | 'denied' | 'unsupported'
+  >('idle');
+
+  useEffect(() => {
+    let cancelled = false;
+    async function startCamera() {
+      if (
+        typeof navigator === 'undefined' ||
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+        setCameraStatus('unsupported');
+        return;
+      }
+      setCameraStatus('requesting');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        setCameraStatus('live');
+      } catch (err) {
+        // NotAllowedError, NotFoundError, NotReadableError…
+        // In every case the upload path stays available, no need to surface
+        // a specific error per case.
+        setCameraStatus('denied');
+      }
+    }
+    startCamera();
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+  }, []);
+
+  const handleCapture = async () => {
+    const video = videoRef.current;
+    if (!video || cameraStatus !== 'live') return;
+
+    // Use the video's native resolution so the OCR has the most pixels.
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.92),
+    );
+    if (!blob) return;
+
+    const file = new File([blob], `receipt-${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+    onCapture?.(file);
+  };
+
+  const handleRetry = () => {
+    // Re-trigger the effect by changing key would be cleaner, but a tiny
+    // local reload of the stream is enough here.
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraStatus('idle');
+    setTimeout(async () => {
+      try {
+        setCameraStatus('requesting');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        setCameraStatus('live');
+      } catch {
+        setCameraStatus('denied');
+      }
+    }, 30);
+  };
+
   return (
     <div className="relative aspect-[3/4] max-w-sm mx-auto rounded-card overflow-hidden bg-anthra border border-border">
-      {/* Camera viewport placeholder */}
-      <div className="absolute inset-0 bg-gradient-to-b from-anthra-500 via-anthra-700 to-anthra-900" />
-      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/40">
-        <Camera className="h-20 w-20" strokeWidth={0.75} />
-      </div>
+      {/* Live camera feed. Always rendered so the ref is attached; hidden
+          via opacity when the stream isn't ready, so we don't flash. */}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        className={
+          cameraStatus === 'live'
+            ? 'absolute inset-0 h-full w-full object-cover'
+            : 'absolute inset-0 h-full w-full object-cover opacity-0'
+        }
+      />
+
+      {/* Idle / requesting / fallback overlay */}
+      {cameraStatus !== 'live' && (
+        <div className="absolute inset-0 bg-gradient-to-b from-anthra-500 via-anthra-700 to-anthra-900 flex items-center justify-center text-muted-foreground/60">
+          {cameraStatus === 'requesting' ? (
+            <div className="flex flex-col items-center gap-2">
+              <Camera className="h-12 w-12 animate-pulse" strokeWidth={0.75} />
+              <span className="text-xs">Démarrage de la caméra…</span>
+            </div>
+          ) : cameraStatus === 'denied' ? (
+            <div className="flex flex-col items-center gap-3 px-6 text-center">
+              <CameraOff className="h-12 w-12 text-amber-400" strokeWidth={1} />
+              <div>
+                <div className="text-sm font-medium text-foreground">
+                  Caméra indisponible
+                </div>
+                <p className="text-xs mt-1 max-w-[16rem]">
+                  Autorisez l'accès dans votre navigateur ou importez une
+                  photo du ticket depuis votre galerie.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRetry}>
+                <RotateCcw className="h-3.5 w-3.5" /> Réessayer
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Camera className="h-16 w-16" strokeWidth={0.75} />
+              <span className="text-xs">Caméra non supportée</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Frame guides */}
       <div className="absolute inset-6 border-2 border-eco/40 rounded-card pointer-events-none">
@@ -52,12 +215,19 @@ export function OcrScanner({ onCapture, onUpload, scanning }: OcrScannerProps) {
           variant="primary"
           className="flex-1"
           size="lg"
-          onClick={onCapture}
-          disabled={scanning}
+          onClick={handleCapture}
+          disabled={scanning || cameraStatus !== 'live'}
         >
           <Camera className="h-4 w-4" /> Capturer
         </Button>
-        <Button variant="ghost" size="lg" onClick={onUpload} disabled={scanning} className="bg-white/5 backdrop-blur">
+        <Button
+          variant="ghost"
+          size="lg"
+          onClick={onUpload}
+          disabled={scanning}
+          className="bg-white/10 backdrop-blur"
+          title="Importer depuis la galerie"
+        >
           <Upload className="h-4 w-4" />
         </Button>
       </div>
