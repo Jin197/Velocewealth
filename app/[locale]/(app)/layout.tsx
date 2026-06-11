@@ -86,8 +86,25 @@ export default async function AppLayout({
   let mfaStatus: MfaStatus | null = null;
   if (isSupabaseConfigured() && profile) {
     mfaStatus = await getMfaStatus();
-    const pathname = headers().get('x-pathname-stripped') ?? '';
-    const onSettings = pathname.startsWith('settings');
+    // We must NOT redirect to /settings/security if we're already there,
+    // otherwise we create an infinite loop. The pathname is exposed by the
+    // root middleware via x-pathname-stripped, but that header is not
+    // always propagated through Vercel's edge cache, so we fall back to:
+    //   1. x-pathname-stripped (preferred — clean path without /<locale>/)
+    //   2. x-pathname (raw path)
+    //   3. next-url (Next.js internal header, set automatically)
+    // If none yield a path we play it safe and SKIP the redirect — better
+    // a transient missed enforcement than a redirect loop the user can't
+    // escape (they'll get re-redirected on their next nav anyway).
+    const h = headers();
+    const stripped = h.get('x-pathname-stripped') ?? '';
+    const raw = h.get('x-pathname') ?? '';
+    const nextUrl = h.get('next-url') ?? '';
+    const candidate = stripped || raw || nextUrl;
+    const onSettings =
+      candidate === '' ||
+      candidate.includes('/settings') ||
+      candidate.startsWith('settings');
     if (mfaStatus.mustEnable && !onSettings) {
       redirect('/settings/security?mfa-required=1');
     }
