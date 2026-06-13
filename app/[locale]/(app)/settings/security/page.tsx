@@ -4,7 +4,8 @@ import { useState, useTransition } from 'react';
 import { Key, AlertTriangle, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Label } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { exportUserDataAction } from '@/server/actions/gdpr';
 import { useLocale } from 'next-intl';
 import { MfaSection } from '@/components/domain/mfa-section';
@@ -216,11 +217,19 @@ export default function SecurityPage() {
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="current">{t.currentPassword}</Label>
-            <Input id="current" type="password" />
+            <PasswordInput
+              id="current"
+              name="currentPassword"
+              autoComplete="current-password"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new">{t.newPassword}</Label>
-            <Input id="new" type="password" />
+            <PasswordInput
+              id="new"
+              name="newPassword"
+              autoComplete="new-password"
+            />
           </div>
         </div>
         <div className="flex justify-end">

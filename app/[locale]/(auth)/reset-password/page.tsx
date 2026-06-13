@@ -5,7 +5,8 @@ import { useState, useTransition, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Label } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { FormError } from '@/components/ui/form-error';
 import { Card } from '@/components/ui/card';
 import { resetPasswordAction } from '@/server/actions/auth';
@@ -74,12 +75,12 @@ export default function ResetPasswordPage() {
         <div className="space-y-1.5">
           <Label htmlFor="password">{t('passwordLabelNew')}</Label>
           <div className="relative">
-            <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-            <Input
+            <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               placeholder="••••••••"
+              autoComplete="new-password"
               className="ps-9"
               required
               disabled={pending}
